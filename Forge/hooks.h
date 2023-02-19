@@ -1276,11 +1276,14 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 {
 	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
 
-	UptimeWebHook.send_message("Player joined! Player count is now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
+	auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(NewPlayer->PlayerState);
+	std::string username = CurrentPlayerState->GetPlayerName().ToString();
+
+	PlayerWebHook.send_message("**" + username + "**" + " joined! Player count is now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
 
 	if (IsBanned(NewPlayer))
 	{
-		KickPlayer(NewPlayer, L"You can't join! Your banned!");
+		KickPlayer(NewPlayer, L"You can't join! You're banned!");
 		return;
 	}
 
