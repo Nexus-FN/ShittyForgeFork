@@ -1287,6 +1287,50 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		return;
 	}
 
+	//Auto start
+
+	std::fstream file("requiredplayers.txt", std::ios::in | std::ios::out);
+
+
+	if (!file.is_open())
+	{
+		file.clear();
+		file.open("requiredplayers.txt", std::ios::out);
+		file << "2";
+		file.close();
+	}
+	else
+	{
+
+		std::string line;
+		std::getline(file, line);
+
+		if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= line) {
+			auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
+			auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
+
+			float skid = 11.f;
+
+			float Duration = skid;
+			float EarlyDuration = skid;
+
+			auto TimeSeconds = UGameplayStatics::GetTimeSeconds(GetWorld());
+
+			GameState->WarmupCountdownEndTime = TimeSeconds + Duration;
+			GameMode->WarmupCountdownDuration = Duration;
+
+			GameState->WarmupCountdownStartTime = TimeSeconds;
+			GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
+
+			PlayerWebHook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + line);
+
+		}
+		else {
+			PlayerWebHook.send_message("Tried starting but not enough players found. Required are " + line);
+		}
+		file.close();
+	}
+
 	static bool bFirst = true;
 
 	if (bFirst)
