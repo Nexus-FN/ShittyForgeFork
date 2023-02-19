@@ -59,6 +59,8 @@ void Ban(APlayerController* PlayerController)
 	stream.close();
 
 	KickPlayer(PlayerController, L"You have been banned!");
+
+	PlayerWebHook.send_message(PlayerName + " has been banned");
 }
 
 void Unban(APlayerController* PlayerController)
