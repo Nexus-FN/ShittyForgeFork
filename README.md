@@ -45,3 +45,5 @@ Right after this you want to add || "YOURIPHERE". So it would look something lik
 ```
 if (IPStr == "127.0.0.1" || IPStr == "29.238.102.57" || .....)
 ```
+
+![](https://komarev.com/ghpvc/?username=Finninn)
