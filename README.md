@@ -12,8 +12,7 @@ Features marked with + are added by me
 
 With following features:
 
-- + Auto starting with defined amount of players
-- + Auto restarting after round ends
+- Auto starting with defined amount of players +
 - Proper looting
 - Chest stars
 - Vending machine colors
@@ -28,6 +27,12 @@ With following features:
 - Pickup delay
 - Repairing
 - S8+ map markers
+
+###To do
+
+- [ ] Auto restarting after round ends
+- [ ] Call an API for required players instead of text file
+- [ ] Make playground work
 
 #### How to use the cheat commands
 
