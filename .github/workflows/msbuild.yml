@@ -42,7 +42,7 @@ jobs:
 
     - name: Zip Files
       run: |
-        cd ${{env.GITHUB_WORKSPACE}}
+        cd ${{env.SOLUTION_FILE_PATH}}
         7z a -r artifacts.zip *
 
     - name: Create Release
