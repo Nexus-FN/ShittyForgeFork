@@ -30,6 +30,7 @@ With following features:
 - Pickup delay
 - Repairing
 - S8+ map markers
+- Killfeed
 
 ### To do
 
