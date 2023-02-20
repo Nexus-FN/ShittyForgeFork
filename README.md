@@ -4,6 +4,10 @@
 
 #### 10.40 gameserver forked from Forge by ForgeFN
 
+*Please note that I am shit at C++ and don't really have any idea what I'm doing*
+
+Most code is skidded from [here](https://github.com/ForgeFN/Forge)
+
 With following features:
 
 - Proper looting
