@@ -8,10 +8,12 @@
 
 Most code is skidded from [here](https://github.com/ForgeFN/Forge)
 
+Features marked with + are added by me
+
 With following features:
 
-- Auto starting with defined amount of players
-- Auto restarting after round ends
+- + Auto starting with defined amount of players
+- + Auto restarting after round ends
 - Proper looting
 - Chest stars
 - Vending machine colors
