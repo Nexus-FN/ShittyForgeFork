@@ -28,7 +28,7 @@ With following features:
 - Repairing
 - S8+ map markers
 
-###To do
+### To do
 
 - [ ] Auto restarting after round ends
 - [ ] Call an API for required players instead of text file
