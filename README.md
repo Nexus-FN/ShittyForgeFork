@@ -7,7 +7,9 @@
 
 ![Discord Invite](https://discordapp.com/api/guilds/1063363261803802695/widget.png?style=banner2)
 
-#### 10.40 gameserver forked from Forge by ForgeFN
+## C++ developer needed, message me via Discord at https://discord.gg/MNavWcHy
+
+### 10.40 gameserver forked from Forge by ForgeFN
 
 *Please note that I am shit at C++ and don't really have any idea what I'm doing*
 
@@ -18,7 +20,8 @@ Features marked with + are added by me
 With following features:
 
 - Auto starting with defined amount of players +
-- Checking if a player is banned via an API
+- Checking if a player is banned via an API +
+- Changing your skin via Discord bot command
 - Proper looting
 - Chest stars
 - Vending machine colors
