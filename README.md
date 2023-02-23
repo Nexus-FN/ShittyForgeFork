@@ -16,6 +16,7 @@ Features marked with + are added by me
 With following features:
 
 - Auto starting with defined amount of players +
+- Checking if a player is banned via an API
 - Proper looting
 - Chest stars
 - Vending machine colors
@@ -35,7 +36,7 @@ With following features:
 ### To do
 
 - [ ] Auto restarting after round ends
-- [ ] Call an API for required players instead of text file
+- [x] Call an API for required players instead of text file
 - [ ] Make playground work
 
 #### How to use the cheat commands
