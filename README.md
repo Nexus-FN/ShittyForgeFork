@@ -9,6 +9,8 @@
 
 *Please note that I am shit at C++ and don't really have any idea what I'm doing*
 
+![Discord Invite](https://discordapp.com/api/guilds/1063363261803802695/widget.png?style=banner2)
+
 Most code is skidded from [here](https://github.com/ForgeFN/Forge)
 
 Features marked with + are added by me
