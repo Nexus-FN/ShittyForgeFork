@@ -7,7 +7,7 @@
 
 ![Discord Invite](https://discordapp.com/api/guilds/1063363261803802695/widget.png?style=banner2)
 
-## C++ developer needed, message me via Discord at https://discord.gg/MNavWcHy
+## C++ developer needed, message me via Discord at [here](https://discord.gg/MNavWcHy)
 
 ### 10.40 gameserver forked from Forge by ForgeFN
 
