@@ -501,6 +501,31 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 			ApplyCID(PlayerState, CIDDef, Pawn);
 			SendMessageToConsole(PlayerController, L"Applied CID!");
 		}
+		else if (Command == "getskin")
+		{
+			auto PlayerState = Cast<AFortPlayerState>(ReceivingController->PlayerState);
+
+			if (!PlayerState) // ???
+			{
+				SendMessageToConsole(PlayerController, L"No playerstate!");
+				return;
+			}
+
+			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);
+
+			std::string CIDStr = getSkins(PlayerController);
+			auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+			// auto CIDDef = UObject::FindObject<UAthenaCharacterItemDefinition>(CIDStr);
+
+			if (!CIDDef)
+			{
+				SendMessageToConsole(PlayerController, L"Invalid character item definition!");
+				return;
+			}
+
+			ApplyCID(PlayerState, CIDDef, Pawn);
+			SendMessageToConsole(PlayerController, L"Applied skin!");
+		}
 		else if (Command == "dbno")
 		{
 			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);

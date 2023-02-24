@@ -701,7 +701,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 
 		auto playlistForUptime = GetPlaylistToUse(); // GameState->CurrentPlaylistInfo.BasePlaylist
 
-		if (!UptimeWebHook.send_message(std::format("Server up! 10.40 {}", playlistForUptime ? playlistForUptime->PlaylistName.ToString() : "")))
+		if (!UptimeWebHook.send_embed("Servers are up", "EU Servers are up, just press play to get into a game", 16776960))
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
@@ -1306,6 +1306,100 @@ __int64 DispatchRequestHook(__int64 a1, __int64* a2, int a3)
 	return DispatchRequestOriginal(a1, a2, a3);
 }
 
+
+	static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+		((std::string*)userdata)->append(ptr, size * nmemb);
+		return size * nmemb;
+	}
+
+	//Function for getting skins
+	std::string getSkins(AFortPlayerControllerAthena* NewPlayer)
+	{
+
+		auto PlayerController = NewPlayer;
+
+		auto PlayerState = PlayerController->PlayerState;
+
+		auto RequestURL = (FString*)(__int64(PlayerController->NetConnection) + 0x1A8);
+		auto RequestURLStr = RequestURL->ToString();
+
+		std::size_t pos = RequestURLStr.find("Name=");
+		std::string Name = RequestURLStr.substr(pos + 5);
+
+		auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
+
+		std::string username = PlayerName.c_str();
+		std::string replacement = "%20";
+
+		std::string replacedUsername = username;
+
+		// Iterate through each character in the string
+		for (int i = 0; i < replacedUsername.length(); i++) {
+			// If the current character is a space, replace it with the replacement string
+			if (replacedUsername[i] == ' ') {
+				replacedUsername.replace(i, 1, replacement);
+				i += replacement.length() - 1;
+			}
+		}
+
+		std::string url = "http://backend.channelmp.com:3551/players/skin/" + replacedUsername;
+
+
+		// Initialize libcurl
+		curl_global_init(CURL_GLOBAL_ALL);
+		CURL* curl = curl_easy_init();
+		if (!curl) {
+			fprintf(stderr, "Failed to initialize libcurl.\n");
+			curl_global_cleanup();
+			PlayerWebHook.send_message("Failed to initialize libcurl for getting skin");
+		}
+
+		// Set URL to API endpoint
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+		// Set callback function for response body
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+		// Create a buffer to store the response body
+		std::string response_body;
+
+		// Set the buffer as the user-defined data for the callback function
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+
+		// Perform HTTP request
+		CURLcode res = curl_easy_perform(curl);
+
+		if (res != CURLE_OK) {
+			fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
+			curl_easy_cleanup(curl);
+			curl_global_cleanup();
+			PlayerWebHook.send_message("Failed to perform HTTP request for getting skin");
+			return "CID_001_Athena_Commando_F_Default";
+		}
+
+		// Check HTTP response code
+		long response_code;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		if (response_code >= 200 && response_code < 300) {
+			// HTTP request successful, check response body
+			curl_easy_cleanup(curl);
+			curl_global_cleanup();
+
+			PlayerWebHook.send_message("HTTP request successful for getting skin" + response_body);
+			return response_body;
+
+		}
+		else {
+			// HTTP request failed
+			fprintf(stderr, "HTTP request failed with status code %ld.\n", response_code);
+			curl_easy_cleanup(curl);
+			curl_global_cleanup();
+			PlayerWebHook.send_message("HTTP request failed with status code " + std::to_string(response_code) + " for getting skin");
+			return "CID_001_Athena_Commando_F_Default";
+		}
+
+	}
+
 void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerControllerAthena* NewPlayer)
 {
 	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
@@ -1315,55 +1409,82 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 	PlayerWebHook.send_message("**" + username + "**" + " joined! Player count is now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
 
-	if (IsBanned(NewPlayer))
+	if (IsBannedAPI(NewPlayer) == true)
 	{
-		KickPlayer(NewPlayer, L"You can't join! You're banned!");
+		KickPlayer(NewPlayer, L"You can't join, you're banned!");
+		PlayerWebHook.send_message("**" + username + "**" + " joined! They are banned!");
 		return;
-	}
-
-	//Auto start
-
-	std::fstream file("requiredplayers.txt", std::ios::in | std::ios::out);
-
-
-	if (!file.is_open())
-	{
-		file.clear();
-		file.open("requiredplayers.txt", std::ios::out);
-		file << "2";
-		file.close();
 	}
 	else
 	{
+		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
+	}
 
-		std::string line;
-		std::getline(file, line);
 
-		if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= line) {
-			auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
-			auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
+	//Auto start
 
-			float skid = 11.f;
+	std::string url = "http://backend.channelmp.com:3551/requiredplayers";
 
-			float Duration = skid;
-			float EarlyDuration = skid;
+	// Initialize libcurl
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		fprintf(stderr, "Failed to initialize libcurl.\n");
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to initialize libcurl for autostart");
+	}
 
-			auto TimeSeconds = UGameplayStatics::GetTimeSeconds(GetWorld());
+	// Set URL to API endpoint
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-			GameState->WarmupCountdownEndTime = TimeSeconds + Duration;
-			GameMode->WarmupCountdownDuration = Duration;
+	// Set callback function for response body
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 
-			GameState->WarmupCountdownStartTime = TimeSeconds;
-			GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
+	// Create a buffer to store the response body
+	std::string response_body;
 
-			PlayerWebHook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + line);
+	// Set the buffer as the user-defined data for the callback function
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+
+	// Perform HTTP request
+	CURLcode res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK) {
+		fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to perform HTTP request for autostart");
+	}
+
+	// Check HTTP response code
+	long response_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+	if (response_code >= 200 && response_code < 300) {
+		// HTTP request successful, check response body
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+
+		if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= response_body) {
+
+			StartAircraft();
+
+			PlayerWebHook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Type of variable is " + typeid(response_body).name() + " Required are " + response_body);
 
 		}
 		else {
-			PlayerWebHook.send_message("Tried starting but not enough players found. Required are " + line);
+			PlayerWebHook.send_message("Tried starting but not enough players found. Required are " + response_body);
 		}
-		file.close();
 	}
+	else {
+		// HTTP request failed
+		fprintf(stderr, "HTTP request failed with status code %ld.\n", response_code);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("HTTP request failed with status code " + std::to_string(response_code) + " for autostart");
+	}
+
+
+
 
 	static bool bFirst = true;
 
@@ -1467,7 +1588,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	NewPlayer->bHasServerFinishedLoading = true;
 	NewPlayer->OnRep_bHasServerFinishedLoading();
 
-	// NewPlayer->bBuildFree = true;
+	//NewPlayer->bBuildFree = true;
 	// NewPlayer->bInfiniteAmmo = true;
 
 	PlayerState->bHasStartedPlaying = true;
@@ -1571,7 +1692,18 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		PlayerState->HeroType = HeroTypeToUse;
 		PlayerState->OnRep_HeroType();
 
-		NewPlayer->CosmeticLoadoutPC.Character = GetRandomObjectOfClass<UAthenaCharacterItemDefinition>(true, true);
+		auto ReceivingController2 = NewPlayer;
+
+		auto PlayerState2 = Cast<AFortPlayerState>(ReceivingController2->PlayerState);
+
+		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
+
+		std::string CIDStr = getSkins(NewPlayer);
+		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+		ApplyCID(PlayerState2, CIDDef, Pawn2);
+
+
+		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
 		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
@@ -1590,7 +1722,19 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	}
 	else
 	{
-		NewPlayer->CosmeticLoadoutPC.Character = GetRandomObjectOfClass<UAthenaCharacterItemDefinition>(true, true);
+		auto ReceivingController2 = NewPlayer;
+
+		auto PlayerState2 = Cast<AFortPlayerState>(ReceivingController2->PlayerState);
+
+		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
+
+		std::string CIDStr = getSkins(NewPlayer);
+		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+		ApplyCID(PlayerState2, CIDDef, Pawn2);
+
+
+		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+
 		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
@@ -1652,6 +1796,19 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		GameState->GameMemberInfoArray.Members.Add(MemberInfo);
 		GameState->GameMemberInfoArray.MarkArrayDirty();
 	}
+
+	//Change skin of players to set skin and pickaxe via pre-determined Discord command (Stolen straight from the cheat manager)
+
+
+	auto ReceivingController2 = NewPlayer;
+
+	auto PlayerState2 = Cast<AFortPlayerState>(ReceivingController2->PlayerState);
+
+	auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
+
+	std::string CIDStr = getSkins(NewPlayer);
+	auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+	ApplyCID(PlayerState2, CIDDef, Pawn2);
 
 	// GameState->PlayersLeft++;
 	GameState->OnRep_PlayersLeft();
@@ -2830,6 +2987,7 @@ void OnBuildingActorInitializedHook(ABuildingActor* BuildingActor, TEnumAsByte<E
 	return OnBuildingActorInitialized(BuildingActor, InitializationReason, BuildingPersistentState);
 }
 
+//Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
 	auto DeadPlayerState = Cast<AFortPlayerStateAthena>(DeadPlayerController->PlayerState);
@@ -2865,6 +3023,8 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 		DeadPlayerState->PawnDeathLocation = DeathInfo.DeathLocation;
 		DeadPlayerState->DeathInfo = DeathInfo;
 		DeadPlayerState->OnRep_DeathInfo();
+
+		
 
 		if (KillerPlayerState && KillerPlayerState != DeadPlayerState)
 		{
@@ -2964,12 +3124,15 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 					if (auto Weapon = Cast<AFortWeapon>(DamageCauser))
 						KillerWeaponDef = Weapon->WeaponData;
 
+
+
 					removeFromAlivePlayers(GameMode, DeadPlayerController, KillerPlayerState == DeadPlayerState ? nullptr : KillerPlayerState, KillerPawn, KillerWeaponDef, DeathInfo.DeathCause, 0);		
 				}
 			}
 		}
 		else
 		{
+
 		}
 	}
 
