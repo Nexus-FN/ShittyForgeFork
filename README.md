@@ -5,7 +5,11 @@
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 
-#### 10.40 gameserver forked from Forge by ForgeFN
+![Discord Invite](https://discordapp.com/api/guilds/1063363261803802695/widget.png?style=banner2)
+
+## C++ developer needed, message me via Discord at [here](https://discord.gg/MNavWcHy)
+
+### 10.40 gameserver forked from Forge by ForgeFN
 
 *Please note that I am shit at C++ and don't really have any idea what I'm doing*
 
@@ -16,6 +20,8 @@ Features marked with + are added by me
 With following features:
 
 - Auto starting with defined amount of players +
+- Checking if a player is banned via an API +
+- Changing your skin via Discord bot command
 - Proper looting
 - Chest stars
 - Vending machine colors
@@ -35,7 +41,7 @@ With following features:
 ### To do
 
 - [ ] Auto restarting after round ends
-- [ ] Call an API for required players instead of text file
+- [x] Call an API for required players instead of text file
 - [ ] Make playground work
 
 #### How to use the cheat commands
