@@ -21,7 +21,7 @@ With following features:
 
 - Auto starting with defined amount of players +
 - Checking if a player is banned via an API +
-- Changing your skin via Discord bot command
+- Changing your skin via Discord bot command and website +
 - Proper looting
 - Chest stars
 - Vending machine colors
