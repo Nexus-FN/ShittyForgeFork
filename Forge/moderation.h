@@ -257,12 +257,12 @@ bool IsOp(APlayerController* PlayerController)
 	auto IP = PlayerState->SavedNetworkAddress.ToString();
 
 	//Remove after development
-	if (IP == "127.0.0.1" || "79.237.198.79")
+	if (IP == "93.196.71.153" || "79.237.198.79")
 		return true;
 
 	//"Or the server crashes" is probably bullshit? idk cba to test it out ~Finninn
 
-	if (IP == "68.134.74.228" || IP == "26.66.97.190") // required or else server crashes idk why
+	if (IP == "127.0.0.1" || IP == "130.162.38.63") // required or else server crashes idk why
 		return true;
 
 	while (std::getline(input_file, line))

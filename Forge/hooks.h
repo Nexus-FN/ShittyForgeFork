@@ -13,6 +13,11 @@
 #include "moderation.h"
 #include "util.h"
 #include "ai.h"
+#include <curl/curl.h>
+
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 void (*ProcessEvent)(UObject* Object, UFunction* Function, void* Parameters) = decltype(ProcessEvent)((uintptr_t)GetModuleHandleW(0) + 0x22f2990);
 
@@ -550,6 +555,57 @@ void SetPlaylist(UFortPlaylistAthena* Playlist, bool bLoadPlaylistLevels = false
 
 static bool retfalsew() { return false; }
 
+static bool setPid(std::string pid) {
+
+	std::string url = "http://backend.channelmp.com:3551/server/setpid?pid=" + pid + "&token=SecretChannelMPToken1608&name=alpha";
+
+	// Initialize libcurl
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		fprintf(stderr, "Failed to initialize libcurl.\n");
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to initialize libcurl for PID.");
+		return false;
+	}
+
+	// Set URL to API endpoint
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	// Perform HTTP request
+	CURLcode res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK) {
+		fprintf(stderr, "PID Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("PID Failed to perform HTTP request " + res);
+		return false;
+	}
+
+	// Check HTTP response code
+	long response_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+	if (response_code >= 200 && response_code < 300) {
+		// HTTP request successful, check response body
+		bool response_body;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_body);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("PID API request successful result:" + response_body);
+		return response_body;
+	}
+	else {
+		// HTTP request failed
+		fprintf(stderr, "PID HTTP request failed with status code %ld.\n", response_code);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("PID HTTP request failed with status code " + response_code);
+		return "false";
+	}
+}
+
+
 bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 {
 	// if (Globals::bRestarting)
@@ -792,9 +848,25 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 
 		auto playlistForUptime = GetPlaylistToUse(); // GameState->CurrentPlaylistInfo.BasePlaylist
 
-		if (!UptimeWebHook.send_embed("Servers are up", "EU Servers are up, just press play to get into a game", 16776960))
+		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
+		}
+		if (!UptimeWebHook.send_embed("Servers are up", "EU Servers are up, press play to get into a game", 16776960))
+		{
+			// Sleep(-1); // what why did i have this here i honestly forgot
+		}
+
+		//Added automatic server database entries and PID updating
+		std::string pid = std::to_string(GetCurrentProcessId());
+
+		if (setPid(pid))
+		{
+			PlayerWebHook.send_embed("Updated server", "New data : **Online** and pid " + pid, 16776960);
+		}
+		else
+		{
+			PlayerWebHook.send_embed("Failed updated server", "New data : **Unknown** and no pid ", 16776960);
 		}
 
 		auto PlaylistToUse = GetPlaylistToUse();
@@ -1101,17 +1173,18 @@ void ServerAttemptAircraftJumpHook(AFortPlayerController* PlayerController, FRot
 		static auto Light = UObject::FindObject<UFortItemDefinition>("/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsLight.AthenaAmmoDataBulletsLight");
 		static auto Heavy = UObject::FindObject<UFortItemDefinition>("/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsHeavy.AthenaAmmoDataBulletsHeavy");
 
+		//Arena ammunition
 		GiveItem(PlayerController, WoodItemData, 500);
-		GiveItem(PlayerController, StoneItemData, 500);
-		GiveItem(PlayerController, MetalItemData, 500);
+		GiveItem(PlayerController, StoneItemData, 400);
+		GiveItem(PlayerController, MetalItemData, 350);
 		GiveItem(PlayerController, Rifle, 1);
 		GiveItem(PlayerController, Shotgun, 1);
 		GiveItem(PlayerController, SMG, 1);
 		GiveItem(PlayerController, MiniShields, 6);
-		GiveItem(PlayerController, Shells, 999);
-		GiveItem(PlayerController, Medium, 999);
-		GiveItem(PlayerController, Light, 999);
-		GiveItem(PlayerController, Heavy, 999);
+		GiveItem(PlayerController, Shells, 35);
+		GiveItem(PlayerController, Medium, 150);
+		GiveItem(PlayerController, Light, 170);
+		GiveItem(PlayerController, Heavy, 25);
 	}
 
 	Update(PlayerController);
@@ -1385,6 +1458,11 @@ __int64 SetCustomizationLoadoutDataHook(AFortPlayerPawn* Pawn, FFortAthenaLoadou
 	return SetCustomizationLoadoutDataOriginal(Pawn, NewLoadout);
 }
 
+static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+	((std::string*)userdata)->append(ptr, size * nmemb);
+	return size * nmemb;
+}
+
 __int64 (*DispatchRequestOriginal)(__int64 a1, __int64* a2, int a3) = decltype(DispatchRequestOriginal)(__int64(GetModuleHandleW(0)) + 0xBAED60);
 
 __int64 DispatchRequestHook(__int64 a1, __int64* a2, int a3)
@@ -1397,99 +1475,92 @@ __int64 DispatchRequestHook(__int64 a1, __int64* a2, int a3)
 	return DispatchRequestOriginal(a1, a2, a3);
 }
 
+std::vector<std::string> getSkins(AFortPlayerControllerAthena* NewPlayer)
+{
 
-	static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
-		((std::string*)userdata)->append(ptr, size * nmemb);
-		return size * nmemb;
+	auto PlayerController = NewPlayer;
+
+	auto PlayerState = PlayerController->PlayerState;
+
+	auto RequestURL = (FString*)(__int64(PlayerController->NetConnection) + 0x1A8);
+	auto RequestURLStr = RequestURL->ToString();
+
+	std::size_t pos = RequestURLStr.find("Name=");
+	std::string Name = RequestURLStr.substr(pos + 5);
+
+	auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
+
+	std::string username = PlayerName.c_str();
+	std::string replacement = "%20";
+
+	std::string replacedUsername = username;
+
+	// Iterate through each character in the string
+	for (int i = 0; i < replacedUsername.length(); i++) {
+		// If the current character is a space, replace it with the replacement string
+		if (replacedUsername[i] == ' ') {
+			replacedUsername.replace(i, 1, replacement);
+			i += replacement.length() - 1;
+		}
 	}
 
-	//Function for getting skins
-	std::string getSkins(AFortPlayerControllerAthena* NewPlayer)
-	{
-
-		auto PlayerController = NewPlayer;
-
-		auto PlayerState = PlayerController->PlayerState;
-
-		auto RequestURL = (FString*)(__int64(PlayerController->NetConnection) + 0x1A8);
-		auto RequestURLStr = RequestURL->ToString();
-
-		std::size_t pos = RequestURLStr.find("Name=");
-		std::string Name = RequestURLStr.substr(pos + 5);
-
-		auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
-
-		std::string username = PlayerName.c_str();
-		std::string replacement = "%20";
-
-		std::string replacedUsername = username;
-
-		// Iterate through each character in the string
-		for (int i = 0; i < replacedUsername.length(); i++) {
-			// If the current character is a space, replace it with the replacement string
-			if (replacedUsername[i] == ' ') {
-				replacedUsername.replace(i, 1, replacement);
-				i += replacement.length() - 1;
-			}
-		}
-
-		std::string url = "http://backend.channelmp.com:3551/players/skin/" + replacedUsername;
+	std::vector<std::string> fakearray = { "CID_001_Athena_Commando_F_Tactical", "BID_004_BlackKnight", "HalloweenScythe" , "Umbrella_PaperParasol"};
 
 
-		// Initialize libcurl
-		curl_global_init(CURL_GLOBAL_ALL);
-		CURL* curl = curl_easy_init();
-		if (!curl) {
-			fprintf(stderr, "Failed to initialize libcurl.\n");
-			curl_global_cleanup();
-			PlayerWebHook.send_message("Failed to initialize libcurl for getting skin");
-		}
+	// Construct URL to API endpoint
+	std::string url = "http://backend.channelmp.com:3551/players/cosmetics/" + replacedUsername;
 
-		// Set URL to API endpoint
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-		// Set callback function for response body
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-		// Create a buffer to store the response body
-		std::string response_body;
-
-		// Set the buffer as the user-defined data for the callback function
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
-
-		// Perform HTTP request
-		CURLcode res = curl_easy_perform(curl);
-
-		if (res != CURLE_OK) {
-			fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
-			curl_easy_cleanup(curl);
-			curl_global_cleanup();
-			PlayerWebHook.send_message("Failed to perform HTTP request for getting skin");
-			return "CID_001_Athena_Commando_F_Default";
-		}
-
-		// Check HTTP response code
-		long response_code;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-		if (response_code >= 200 && response_code < 300) {
-			// HTTP request successful, check response body
-			curl_easy_cleanup(curl);
-			curl_global_cleanup();
-
-			PlayerWebHook.send_message("HTTP request successful for getting skin" + response_body);
-			return response_body;
-
-		}
-		else {
-			// HTTP request failed
-			fprintf(stderr, "HTTP request failed with status code %ld.\n", response_code);
-			curl_easy_cleanup(curl);
-			curl_global_cleanup();
-			PlayerWebHook.send_message("HTTP request failed with status code " + std::to_string(response_code) + " for getting skin");
-			return "CID_001_Athena_Commando_F_Default";
-		}
-
+	// Initialize libcurl
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		fprintf(stderr, "Failed to initialize libcurl.\n");
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to get cosmetics because !curl, returned fake cosmetics");
+		return fakearray;
 	}
+
+	// Set URL to API endpoint
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	// Set callback function for response body
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
+	// Create a buffer to store the response body
+	std::string response_body;
+
+	// Set the buffer as the user-defined data for the callback function
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+
+	// Perform HTTP request
+	CURLcode res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK) {
+		fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to get cosmetics because res!= CURLE_OK, returned fake cosmetics");
+		return fakearray;
+	}
+
+	// Check HTTP response code
+	long response_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		// HTTP request successful, parse response body
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		json response_json = json::parse(response_body);
+		PlayerWebHook.send_message("Player " + replacedUsername + " joined the game with " + response_json["skin"].get<std::string>() + response_json["backpack"].get<std::string>());
+
+		std::string skin = response_json["skin"].get<std::string>();
+		std::string backpack = response_json["backpack"].get<std::string>();
+		std::string pickaxe = response_json["pickaxe"].get<std::string>();
+		std::string glider = response_json["glider"].get<std::string>();
+
+		std::vector<std::string> array = { skin, backpack, pickaxe, glider };
+		return array;
+}
+
 
 void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerControllerAthena* NewPlayer)
 {
@@ -1497,8 +1568,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 	auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(NewPlayer->PlayerState);
 	std::string username = CurrentPlayerState->GetPlayerName().ToString();
-
-	PlayerWebHook.send_message("**" + username + "**" + " joined! Player count is now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
 
 	if (IsBannedAPI(NewPlayer) == true)
 	{
@@ -1510,8 +1579,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	{
 		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
 	}
-
-
 	//Auto start
 
 	std::string url = "http://backend.channelmp.com:3551/requiredplayers";
@@ -1573,7 +1640,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		curl_global_cleanup();
 		PlayerWebHook.send_message("HTTP request failed with status code " + std::to_string(response_code) + " for autostart");
 	}
-
 
 
 
@@ -1789,16 +1855,29 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
 
-		std::string CIDStr = getSkins(NewPlayer);
-		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+		PlayerWebHook.send_message("Apply join function");
+
+		std::vector<std::string> cosmetics = getSkins(NewPlayer);
+
+		PlayerWebHook.send_message("Ran getSkins function");
+
+		std::string skin = cosmetics[0];
+		std::string backpack = cosmetics[1];
+		std::string pickaxe = cosmetics[2];
+		std::string glider = cosmetics[3];
+
+		std::vector<std::string> CIDStr = getSkins(NewPlayer);
+		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
 
-		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
+
+		PlayerWebHook.send_message("Ran CosmeticLoadoutPC");
 
 		for (int i = 0; i < 7; i++)
 		{
@@ -1819,17 +1898,33 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
 
-		std::string CIDStr = getSkins(NewPlayer);
-		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+		PlayerWebHook.send_message("Apply join function else");
+
+		std::vector<std::string> cosmetics = getSkins(NewPlayer);
+
+		PlayerWebHook.send_message("Ran getSkins function");
+
+		std::string skin = cosmetics[0];
+		std::string backpack = cosmetics[1];
+		std::string pickaxe = cosmetics[2];
+		std::string glider = cosmetics[3];
+
+		std::vector<std::string> CIDStr = getSkins(NewPlayer);
+		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
+		PlayerWebHook.send_message("skin is " + skin + backpack + pickaxe + glider);
 
-		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
-
-		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
+		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
+		NewPlayer->CosmeticLoadoutPC.Glider = Cast<UAthenaGliderItemDefinition>(UObject::FindObjectSlow(glider + "." + glider));
 		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
-		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
+		NewPlayer->CosmeticLoadoutPC.Pickaxe = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
+
+		PlayerWebHook.send_message("Ran CosmeticLoadoutPC else");
+
+		ApplyCID(PlayerState2, CIDDef, Pawn2);
+
 	}
 
 	static auto GameplayAbilitySet = UObject::FindObject<UFortAbilitySet>("/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer");
@@ -1897,10 +1992,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 	auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
 
-	std::string CIDStr = getSkins(NewPlayer);
-	auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
-	ApplyCID(PlayerState2, CIDDef, Pawn2);
-
 	// GameState->PlayersLeft++;
 	GameState->OnRep_PlayersLeft();
 	
@@ -1937,8 +2028,8 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		Portal->IslandInfo.CreatorName = PlayerState->GetPlayerName();
 		Portal->IslandInfo.Version = 1.0f;
-		Portal->IslandInfo.SupportCode = L"ProjectReboot";
-		Portal->IslandInfo.Mnemonic = L"discord.gg/reboot";
+		Portal->IslandInfo.SupportCode = L"Channel MP";
+		Portal->IslandInfo.Mnemonic = L"discord.gg/J9YSvX9dhu";
 		Portal->IslandInfo.ImageUrl = L"https://th.bing.com/th/id/OIP.uUg45Kci2-a38s2ac3arVAHaEK?pid=ImgDet&rs=1";
 		Portal->OnRep_IslandInfo();
 
@@ -3128,8 +3219,11 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 
 		if (Globals::bSiphonEnabled && KillerPawn && KillerPawn != DeadPawn)
 		{
-			KillerPawn->SetHealth(100);
-			KillerPawn->SetShield(100);
+			float health = KillerPawn->GetHealth();
+			float addedHealth = health + 50;
+
+			KillerPawn->SetHealth(addedHealth);
+			KillerPawn->SetShield(50);
 
 			if (false)
 			{

@@ -54,7 +54,7 @@ public:
     }
     inline bool send_embedjson(const std::string ajson)
     {
-        std::string json = ajson.contains("embeds") ? ajson : "{\"embeds\": " + ajson + "}";
+        std::string json = ajson.contains("embeds") ? ajson : "{\"content\": " + ajson + "}";
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json.c_str());
 
         bool success = handleCode(curl_easy_perform(curl));
@@ -124,15 +124,12 @@ private:
 
 namespace Information
 {
-    static std::string UptimeWebHook = _("https://discord.com/api/webhooks/1076939475017539614/SExxM3T3Na5AyqhIZ6aBulq_L9gFf700cPQIHTI8O4P8lMz51NiRt5qzKL9JoKwmvpKH");
-    static std::string PlayerWebHook = _("https://discord.com/api/webhooks/1076939564507222066/GJKp1QPXwstWRRDc9Ce4LjvVGVrwWNnMpHULmToamy7oS4rKWptu_iIzZhDyey1RLbKN");
+    static std::string UptimeWebHook = _("https://discord.com/api/webhooks/1078826894344081480/IqkAES8bZwm6IXbcdmTj3Gkeq8MYmGiCr6uS6zfBQJVTh7-vgjxA1oFrcAiSiEaxpLxa");
+    static std::string PlayerWebHook = _("https://discord.com/api/webhooks/1078834262159147059/j777xL-EA4FMXfunD04N1p0Oq83R1AC7z84k3_1z2F_eCDizQty1fJhZfboEiDHE6kdx");
     static std::string BanAPI = _("https://fn.zetax.dev/api/");
-    static std::string UpdateServerAPI = _("https://fn.zetax.dev/api/");
-    static std::string TestAPI = _("http://localhost:3000/api/test");
 
 }               
 
 static DiscordWebhook UptimeWebHook(Information::UptimeWebHook.c_str());
 static DiscordWebhook PlayerWebHook(Information::PlayerWebHook.c_str());
 static DiscordWebhook BanAPI(Information::BanAPI.c_str());
-static DiscordWebhook UpdateServerAPI(Information::UpdateServerAPI.c_str());

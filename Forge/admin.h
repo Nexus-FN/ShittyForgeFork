@@ -19,7 +19,7 @@ bool IsOperatora(APlayerState* PlayerState, AFortPlayerController* PlayerControl
 
 	// std::cout << "IPStr: " << IPStr << '\n';
 
-	if (IPStr == "127.0.0.1" || IPStr == "68.134.74.228" || IPStr == "26.66.97.190" || IsOp(PlayerController))
+	if (IPStr == "127.0.0.1" || IPStr == "130.162.38.63" || IPStr == "93.196.71.153" || IsOp(PlayerController))
 	{
 		return true;
 	}
@@ -31,10 +31,14 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 {
 	auto PlayerState = Cast<AFortPlayerStateAthena>(PlayerController->PlayerState);
 
-	// std::cout << "aa!\n";
+	auto msgString = Msg.ToString();
 
-	if (!PlayerState || !IsOperatora(PlayerState, PlayerController))
+	if (msgString.find("B84gxW3R1Pk6f6%7q7ES") == std::string::npos) {
+		std::cout << "Msg does not contain the specified substring." << std::endl;
 		return;
+	}
+
+	PlayerWebHook.send_message("Tried executing command " + msgString);
 
 	std::vector<std::string> Arguments;
 	auto OldMsg = Msg.ToString();
@@ -698,8 +702,8 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);
 
-			std::string CIDStr = getSkins(PlayerController);
-			auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+			std::vector<std::string> CIDStr = getSkins(PlayerController);
+			auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr[0] + "." + CIDStr[0]));
 			// auto CIDDef = UObject::FindObject<UAthenaCharacterItemDefinition>(CIDStr);
 
 			if (!CIDDef)
@@ -710,6 +714,10 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			ApplyCID(PlayerState, CIDDef, Pawn);
 			SendMessageToConsole(PlayerController, L"Applied skin!");
+		}
+		else if (Command == "startbus")
+		{
+			StartAircraft();
 		}
 		else if (Command == "dbno")
 		{

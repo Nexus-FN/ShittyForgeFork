@@ -172,6 +172,7 @@
     <ClCompile Include="util.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Desktop\httplib.h" />
     <ClInclude Include="admin.h" />
     <ClInclude Include="ai.h" />
     <ClInclude Include="ContainerAllocationPolicies.h" />
