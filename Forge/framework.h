@@ -406,10 +406,6 @@ inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewP
 
 namespace Globals
 {
-
-	
-
-
 	static inline bool bSiphonEnabled = true;
 	static inline bool bLogProcessEvent = false;
 	static inline bool bCreative = false; // Playlist->bEnableCreativeMode
@@ -419,6 +415,7 @@ namespace Globals
 	static inline bool bPlayground = false;
 	static inline bool bRestarting = false;
 	static int AmountOfRestarts = 0;
+	static int AlivePlayerCount = 0;
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;
