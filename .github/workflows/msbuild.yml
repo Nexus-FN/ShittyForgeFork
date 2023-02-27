@@ -45,10 +45,3 @@ jobs:
         path: ${{env.SOLUTION_FILE_PATH}}/x64/Release/Forge.dll
         if-no-files-found: warn
         retention-days: 60
-    - name: Release with Notes
-      uses: softprops/action-gh-release@v1
-      with:
-          tag_name: v1.0
-          files: ${{env.SOLUTION_FILE_PATH}}/x64/Release/Forge.dll
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
