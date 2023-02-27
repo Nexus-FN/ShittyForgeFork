@@ -42,6 +42,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Release
-        path: ${{env.SOLUTION_FILE_PATH}}/x64/Release
+        path: ${{env.SOLUTION_FILE_PATH}}/x64/Release/Forge.dll
         if-no-files-found: warn
         retention-days: 60
