@@ -4,13 +4,9 @@
 
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 
-![Discord Invite](https://discordapp.com/api/guilds/1063363261803802695/widget.png?style=banner2)
+[![MSBuild](https://github.com/Channelmp/GameserverPrivate/actions/workflows/msbuild.yml/badge.svg)](https://github.com/Channelmp/GameserverPrivate/actions/workflows/msbuild.yml)
 
-## C++ developer needed, message me via Discord at [here](https://discord.gg/MNavWcHy)
-
-### 10.40 gameserver forked from Forge by ForgeFN
-
-*Please note that I am shit at C++ and don't really have any idea what I'm doing*
+### 10.40 private gameserver forked from Forge by ForgeFN
 
 Most code is skidded from [here](https://github.com/ForgeFN/Forge)
 
