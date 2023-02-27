@@ -1,9 +1,10 @@
 name: Build and push Docker image
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI build"]
+    types:
+      - complete
 
 env:
   DOCKER_USERNAME: ${{ github.actor }}
