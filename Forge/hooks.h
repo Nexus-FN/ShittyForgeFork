@@ -3181,7 +3181,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 
 		if (AlivePlayerCount == 1)
 		{
-			PlayerWebHook.send_message("Last Player Standing")
+			PlayerWebHook.send_message("Last Player Standing");
 		}
 
 	auto DeadPlayerState = Cast<AFortPlayerStateAthena>(DeadPlayerController->PlayerState);
