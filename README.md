@@ -1,4 +1,4 @@
-# Channel
+# Channel Private Version
 
 <img src="https://cdn.zetax.dev/A8LHbkJu3gtZ/direct" alt= "Channel logo" width="250" height="250">
 
