@@ -415,7 +415,6 @@ namespace Globals
 	static inline bool bPlayground = false;
 	static inline bool bRestarting = false;
 	static int AmountOfRestarts = 0;
-	static int AlivePlayerCount = 0;
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;

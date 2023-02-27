@@ -1579,8 +1579,8 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	{
 		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
 	}
-//Add 1 to the player count
-	AlivePlayers++;
+
+	Globals.PlayerCount++;
 
 
 	//Auto start
@@ -3176,10 +3176,10 @@ void OnBuildingActorInitializedHook(ABuildingActor* BuildingActor, TEnumAsByte<E
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
-		AlivePlayerCount--;
-		PlayerWebHook.send_message("Player Died alive: " + std::to_string(AlivePlayerCount));
+		Globals.PlayerCount--;
+		PlayerWebHook.send_message("Player Died alive: " + std::to_string(	Globals.PlayerCount++;));
 
-		if (AlivePlayerCount == 1)
+		if (Globals.PlayerCount; == 1)
 		{
 			PlayerWebHook.send_message("Last Player Standing");
 		}
