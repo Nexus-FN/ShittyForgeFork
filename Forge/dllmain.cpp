@@ -42,7 +42,7 @@ DWORD WINAPI Main(LPVOID)
     FILE* fptr;
     freopen_s(&fptr, "CONOUT$", "w+", stdout);
 
-    SetConsoleTitleA("Forge Server");
+    SetConsoleTitleA("Channel Server");
 
     std::ios::sync_with_stdio(false);
 
