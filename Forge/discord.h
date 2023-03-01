@@ -127,9 +127,12 @@ namespace Information
     static std::string UptimeWebHook = _("https://discord.com/api/webhooks/1078826894344081480/IqkAES8bZwm6IXbcdmTj3Gkeq8MYmGiCr6uS6zfBQJVTh7-vgjxA1oFrcAiSiEaxpLxa");
     static std::string PlayerWebHook = _("https://discord.com/api/webhooks/1078834262159147059/j777xL-EA4FMXfunD04N1p0Oq83R1AC7z84k3_1z2F_eCDizQty1fJhZfboEiDHE6kdx");
     static std::string BanAPI = _("https://fn.zetax.dev/api/");
-
+    static std::string ServerWebhook = _("https://discord.com/api/webhooks/1080136786417815602/X-8ox6oCDXFo2mJepSGswlg2LJE48hEmM1djZiFr05FeCRmfN6jA_tYf3lORSYRdAelU");
+    static std::string DeathWebhook = _("https://discord.com/api/webhooks/1080138055249297438/KpCzKieSGmC3TUHU954l4k0xS8P6jcHUxBf8Wyqk1tqo8e3VmHxBT8sMPfmc9ohuofg6");
 }               
 
 static DiscordWebhook UptimeWebHook(Information::UptimeWebHook.c_str());
 static DiscordWebhook PlayerWebHook(Information::PlayerWebHook.c_str());
 static DiscordWebhook BanAPI(Information::BanAPI.c_str());
+static DiscordWebhook ServerWebhook(Information::ServerWebhook.c_str());
+static DiscordWebhook DeathWebhook(Information::DeathWebhook.c_str());

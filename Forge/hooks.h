@@ -846,7 +846,14 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		static auto LlamaClass = UObject::FindObject<UClass>("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C");
 		// std::cout << "NetServerMaxTickRate: " << GetWorld()->NetDriver->NetServerMaxTickRate << '\n';
 
+		ServerWebhook.send_message("Trying to get required players");
 		auto playlistForUptime = GetPlaylistToUse(); // GameState->CurrentPlaylistInfo.BasePlaylist
+		ServerWebhook.send_message("Trying to get required players (After playlist)");
+
+		std::string requiredplayers = getRequestString("http://backend.channelmp.com:3551/requiredplayers");
+		ServerWebhook.send_message("Got required players: " + requiredplayers);
+		Globals::RequiredPlayers = requiredplayers;
+		ServerWebhook.send_message("Stored required players: " + requiredplayers);
 
 		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
@@ -862,11 +869,12 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 
 		if (setPid(pid))
 		{
-			PlayerWebHook.send_embed("Updated server", "New data : **Online** and pid " + pid, 16776960);
+			Globals::pid = pid;
+			ServerWebhook.send_embed("Updated server", "New data : **Online** and pid " + pid, 16776960);
 		}
 		else
 		{
-			PlayerWebHook.send_embed("Failed updated server", "New data : **Unknown** and no pid ", 16776960);
+			ServerWebhook.send_embed("Failed updated server", "New data : **Unknown** and no pid ", 16776960);
 		}
 
 		auto PlaylistToUse = GetPlaylistToUse();
@@ -1578,74 +1586,19 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	else
 	{
 		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
+		Globals::TotalPlayers++;
 	}
+	
+	if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= Globals::RequiredPlayers) {
 
-	Globals.PlayerCount++;
+		StartAircraft();
 
+		ServerWebhook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + Globals::RequiredPlayers + " as globals");
 
-	//Auto start
-
-	std::string url = "http://backend.channelmp.com:3551/requiredplayers";
-
-	// Initialize libcurl
-	curl_global_init(CURL_GLOBAL_ALL);
-	CURL* curl = curl_easy_init();
-	if (!curl) {
-		fprintf(stderr, "Failed to initialize libcurl.\n");
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to initialize libcurl for autostart");
-	}
-
-	// Set URL to API endpoint
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-	// Set callback function for response body
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-	// Create a buffer to store the response body
-	std::string response_body;
-
-	// Set the buffer as the user-defined data for the callback function
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
-
-	// Perform HTTP request
-	CURLcode res = curl_easy_perform(curl);
-
-	if (res != CURLE_OK) {
-		fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to perform HTTP request for autostart");
-	}
-
-	// Check HTTP response code
-	long response_code;
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-	if (response_code >= 200 && response_code < 300) {
-		// HTTP request successful, check response body
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-
-		if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= response_body) {
-
-			StartAircraft();
-
-			PlayerWebHook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Type of variable is " + typeid(response_body).name() + " Required are " + response_body);
-
-		}
-		else {
-			PlayerWebHook.send_message("Tried starting but not enough players found. Required are " + response_body);
-		}
 	}
 	else {
-		// HTTP request failed
-		fprintf(stderr, "HTTP request failed with status code %ld.\n", response_code);
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("HTTP request failed with status code " + std::to_string(response_code) + " for autostart");
+		ServerWebhook.send_message("Tried starting but not enough players");
 	}
-
-
 
 	static bool bFirst = true;
 
@@ -1881,6 +1834,8 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
 
+		ApplyCID(PlayerState2, CIDDef, Pawn2);
+
 		PlayerWebHook.send_message("Ran CosmeticLoadoutPC");
 
 		for (int i = 0; i < 7; i++)
@@ -1917,7 +1872,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
-		PlayerWebHook.send_message("skin is " + skin + backpack + pickaxe + glider);
+		ServerWebhook.send_message("skin is " + skin + backpack + pickaxe + glider);
 
 		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		NewPlayer->CosmeticLoadoutPC.Glider = Cast<UAthenaGliderItemDefinition>(UObject::FindObjectSlow(glider + "." + glider));
@@ -3176,13 +3131,6 @@ void OnBuildingActorInitializedHook(ABuildingActor* BuildingActor, TEnumAsByte<E
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
-		Globals.PlayerCount--;
-		PlayerWebHook.send_message("Player Died alive: " + std::to_string(	Globals.PlayerCount++;));
-
-		if (Globals.PlayerCount; == 1)
-		{
-			PlayerWebHook.send_message("Last Player Standing");
-		}
 
 	auto DeadPlayerState = Cast<AFortPlayerStateAthena>(DeadPlayerController->PlayerState);
 	auto KillerPawn = Cast<AFortPlayerPawnAthena>(DeathReport.KillerPawn);
@@ -3218,8 +3166,23 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 		DeadPlayerState->DeathInfo = DeathInfo;
 		DeadPlayerState->OnRep_DeathInfo();
 
+		if (!Globals::bPlayground) {
 
-		
+			Globals::TotalPlayers--;
+			DeathWebhook.send_embed("Removed one player from player count", "Not logging new count bc it might crash, look in the next line", 16776960);
+			DeathWebhook.send_message(std::to_string(Globals::TotalPlayers));
+
+
+			if (Globals::TotalPlayers == 1)
+			{
+				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
+				system("restart.bat");
+			}
+		}
+
+
+
+
 
 		if (KillerPlayerState && KillerPlayerState != DeadPlayerState)
 		{
@@ -3310,9 +3273,9 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 			if (!DeadPawn->bIsDBNO)
 			{
 				{
-					static void (*removeFromAlivePlayers)(AFortGameModeAthena* GameMode, AFortPlayerControllerAthena* PlayerController, APlayerState* PlayerState, APawn* FinisherPawn,
-						UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, char a7)
-							= decltype(removeFromAlivePlayers)(__int64(GetModuleHandleW(0)) + 0x11D95E0);
+					static void (*removeFromAlivePlayers)(AFortGameModeAthena * GameMode, AFortPlayerControllerAthena * PlayerController, APlayerState * PlayerState, APawn * FinisherPawn,
+						UFortWeaponItemDefinition * FinishingWeapon, EDeathCause DeathCause, char a7)
+						= decltype(removeFromAlivePlayers)(__int64(GetModuleHandleW(0)) + 0x11D95E0);
 
 					AActor* DamageCauser = DeathReport.DamageCauser;
 					UFortWeaponItemDefinition* KillerWeaponDef = nullptr;
@@ -3324,7 +3287,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 
 
 
-					removeFromAlivePlayers(GameMode, DeadPlayerController, KillerPlayerState == DeadPlayerState ? nullptr : KillerPlayerState, KillerPawn, KillerWeaponDef, DeathInfo.DeathCause, 0);		
+					removeFromAlivePlayers(GameMode, DeadPlayerController, KillerPlayerState == DeadPlayerState ? nullptr : KillerPlayerState, KillerPawn, KillerWeaponDef, DeathInfo.DeathCause, 0);
 				}
 			}
 		}

@@ -32,6 +32,62 @@ bool IsBanned(APlayerController* PlayerController)
 	return false;
 }
 
+static size_t write_callback2(char* ptr, size_t size, size_t nmemb, void* userdata) {
+	((std::string*)userdata)->append(ptr, size * nmemb);
+	return size * nmemb;
+}
+
+static std::string getRequestString(std::string url)
+{
+
+	// Initialize libcurl
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		curl_global_cleanup();
+	}
+
+	// Set URL to API endpoint
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	// Set callback function for response body
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback2);
+
+	// Create a buffer to store the response body
+	std::string response_body;
+
+	// Set the buffer as the user-defined data for the callback function
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+
+	// Perform HTTP request
+	CURLcode res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK) {
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		ServerWebhook.send_message("An API request failed");
+	}
+
+	// Check HTTP response code
+	long response_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+	if (response_code >= 200 && response_code < 300) {
+		// HTTP request successful, check response body
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+
+		std::string body = response_body;
+		return body;
+	}
+	else {
+		// HTTP request failed
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		ServerWebhook.send_message("An API request failed 2");
+	}
+
+}
+
 bool IsBannedAPI(APlayerController* PlayerController)
 {
 
@@ -61,55 +117,24 @@ bool IsBannedAPI(APlayerController* PlayerController)
 		}
 	}
 
+	ServerWebhook.send_message("Trying to check if player is banned");
 	std::string url = "http://backend.channelmp.com:3551/players/banned/" + replacedUsername;
+	ServerWebhook.send_message("Checked if player is banned");
 
+	std::string response = getRequestString(url);
 
-	// Initialize libcurl
-	curl_global_init(CURL_GLOBAL_ALL);
-	CURL* curl = curl_easy_init();
-	if (!curl) {
-		fprintf(stderr, "Failed to initialize libcurl.\n");
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to initialize libcurl for ban.");
-		return false;
-	}
+	ServerWebhook.send_message("Got if player is banned: " + response);
 
-	// Set URL to API endpoint
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-	// Perform HTTP request
-	CURLcode res = curl_easy_perform(curl);
-
-	if (res != CURLE_OK) {
-		fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to perform HTTP request for ban: " + res);
-		return false;
-	}
-
-	// Check HTTP response code
-	long response_code;
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-	if (response_code >= 200 && response_code < 300) {
-		// HTTP request successful, check response body
-		std::string response_body;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_body);
-		bool response_bool = response_body == "true";
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("API request successful." + response_body);
-		return response_bool;
+	if (response == "1")
+	{
+		return true;
 	}
 	else {
-		// HTTP request failed
-		fprintf(stderr, "HTTP request failed with status code %ld.\n", response_code);
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("HTTP request failed with status code " + response_code);
 		return false;
 	}
+
 }
+
 
 
 std::string GetFilePath()

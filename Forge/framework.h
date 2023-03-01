@@ -349,6 +349,10 @@ inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewP
 		}
 	}
 
+	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
+
+	auto gamephase = GameState->GamePhase;
+
 	auto newpawn = GameMode->SpawnDefaultPawnAtTransform(NewPlayer, SpawnTransform);
 	std::cout << "newpawn: " << newpawn << '\n';
 	std::cout << "bIsRespawning: " << bIsRespawning << '\n';
@@ -412,9 +416,12 @@ namespace Globals
 	static inline bool bAllowJoinInProgress = false;
 	static inline bool bLateGame = false;
 	// static inline bool bMinimumPlayersToDropLS = 1;
-	static inline bool bPlayground = false;
+	static inline bool bPlayground = true;
 	static inline bool bRestarting = false;
 	static int AmountOfRestarts = 0;
+	static int TotalPlayers = 0;
+	static std::string RequiredPlayers = "5";
+	static std::string pid = "0";
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;

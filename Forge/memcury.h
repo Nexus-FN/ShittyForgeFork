@@ -36,7 +36,7 @@
                -AddHook: Adds a hook to the VEH Hook system.
                -RemoveHook: Removes a hook from the VEH Hook system.
 */
-
+#include <algorithm>
 #include <string>
 #include <format>
 #include <vector>
