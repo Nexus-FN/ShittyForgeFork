@@ -266,13 +266,13 @@ DWORD WINAPI GuiThread(LPVOID)
 					StartAircraft();
 				}
 
-				/* if (ImGui::Button("Restart"))
+				if (ImGui::Button("Restart"))
 				{
 					auto DefaultFortGameModeAthena = AFortGameModeAthena::StaticClass()->CreateDefaultObject();
 					static auto ReadyToStartMatchFn = UObject::FindObject<UFunction>("/Script/Engine.GameMode.ReadyToStartMatch");
-					// UnhookFunction(DefaultFortGameModeAthena, ReadyToStartMatchFn, ReadyToStartMatchHook, (PVOID*)&ReadyToStartMatch);
+					UnhookFunction(DefaultFortGameModeAthena, ReadyToStartMatchFn, ReadyToStartMatchHook, (PVOID*)&ReadyToStartMatch);
 					RestartServer();
-				} */
+				}
 
 				if (ImGui::Button("Dump Objects"))
 				{
