@@ -78,3 +78,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: SFTP uploader
+        uses: wangyucode/sftp-upload-action@v2.0.2
+        with:
+          host: 'backend.channelmp.com'
+          privateKey: ${{ secrets.key }} 
+          localDir: ${{env.SOLUTION_FILE_PATH}}/x64/Release/Forge.dll
+          remoteDir: '/etc/gamefiles'
