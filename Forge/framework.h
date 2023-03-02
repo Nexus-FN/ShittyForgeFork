@@ -415,9 +415,9 @@ namespace Globals
 	static inline bool bLogProcessEvent = false;
 	static inline bool bCreative = false; // Playlist->bEnableCreativeMode
 	static inline bool bAllowJoinInProgress = false;
-	static inline bool bLateGame = false;
+	static inline bool bLateGame = true;
 	// static inline bool bMinimumPlayersToDropLS = 1;
-	static inline bool bPlayground = true;
+	static inline bool bPlayground = false;
 	static inline bool bRestarting = false;
 	static int AmountOfRestarts = 0;
 	static int TotalPlayers = 0;
