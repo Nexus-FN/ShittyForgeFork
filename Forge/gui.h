@@ -36,9 +36,10 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+
 void InitStyle()
 {
-	// ImGui::GetIO().Fonts->AddFontFromFileTTF("Reboot Resources/fonts/ruda-bold.ttf", 17);
+	//ImGui::GetIO().Fonts->AddFontFromFileTTF("Reboot Resources/fonts/fortnite.otf", 17);
 	ImGui::GetStyle().FrameRounding = 4.0f;
 	ImGui::GetStyle().GrabRounding = 4.0f;
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -129,7 +130,6 @@ void InitStyle()
 	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.800000011920929f, 0.800000011920929f, 0.800000011920929f, 0.3499999940395355f);
 }
 
-}
 
 class Playera
 {
