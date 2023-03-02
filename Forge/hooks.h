@@ -859,6 +859,8 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
         	std::this_thread::sleep_for(std::chrono::minutes(5));
         		StartAircraft();
     		});
+		
+		ServerWebhook.send_message("Timer started for 5m");
 
 		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
