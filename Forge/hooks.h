@@ -854,6 +854,11 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		ServerWebhook.send_message("Got required players: " + requiredplayers);
 		Globals::RequiredPlayers = requiredplayers;
 		ServerWebhook.send_message("Stored required players: " + requiredplayers);
+		
+		std::thread t([](){
+        	std::this_thread::sleep_for(std::chrono::minutes(5));
+        		StartAircraft();
+    		});
 
 		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
