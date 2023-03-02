@@ -325,7 +325,8 @@ static __int64 (*ApplyCustomizationToCharacter)(AFortPlayerState* a1) = decltype
 inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewPlayer, AActor* StartSpot)
 {
 	auto SpawnTransform = StartSpot->GetTransform();
-	// SpawnLocation.Translation = FVector{ 1250, 1818, 3284 };
+	
+
 
 	auto Controller = Cast<AFortPlayerControllerAthena>(NewPlayer);
 
@@ -420,8 +421,9 @@ namespace Globals
 	static inline bool bRestarting = false;
 	static int AmountOfRestarts = 0;
 	static int TotalPlayers = 0;
-	static std::string RequiredPlayers = "5";
+	static int RequiredPlayers = 10;
 	static std::string pid = "0";
+	static bool TimerRun = false;
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;

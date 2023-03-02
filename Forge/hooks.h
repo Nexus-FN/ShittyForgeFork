@@ -1,5 +1,5 @@
 #pragma once
-
+#include <atomic>
 #include "framework.h"
 
 #include <random>
@@ -16,6 +16,8 @@
 #include <curl/curl.h>
 
 #include "json.hpp"
+
+std::atomic<bool> g_bExit(false);
 
 using json = nlohmann::json;
 
@@ -605,6 +607,39 @@ static bool setPid(std::string pid) {
 	}
 }
 
+void read_console_input()
+{
+	// Get the handle to the console input buffer
+	HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+
+	// Set the console mode to allow reading input events
+	DWORD mode;
+	GetConsoleMode(hInput, &mode);
+	SetConsoleMode(hInput, mode | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT);
+
+	// Read input events until the global exit flag is set
+	INPUT_RECORD input;
+	DWORD read;
+	while (!g_bExit.load())
+	{
+		ReadConsoleInput(hInput, &input, 1, &read);
+		if (input.EventType == KEY_EVENT && input.Event.KeyEvent.bKeyDown)
+		{
+			if (input.Event.KeyEvent.uChar.AsciiChar == 'e' &&
+				input.Event.KeyEvent.dwControlKeyState == 0)
+			{
+				// User typed "e" without any modifiers, so set the global exit flag
+				g_bExit.store(true);
+				break;
+			}
+			else
+			{
+				// Echo the character to the console
+				std::cout << input.Event.KeyEvent.uChar.AsciiChar;
+			}
+		}
+	}
+}
 
 bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 {
@@ -674,9 +709,9 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		static UNetDriver* (*CreateNetDriver)(UEngine*, UWorld*, FName) = decltype(CreateNetDriver)((uintptr_t)GetModuleHandleW(0) + 0x347FAF0);
 		static char (*InitListen)(UNetDriver*, void*, FURL&, bool, FString&) = decltype(InitListen)((uintptr_t)GetModuleHandleW(0) + 0x6F5F90);
 		static void (*SetWorld)(UNetDriver*, UWorld*) = decltype(SetWorld)((uintptr_t)GetModuleHandleW(0) + 0x31EDF40);
-		static void (*PauseBeaconRequests)(AOnlineBeacon* a1, char a2) = decltype(PauseBeaconRequests)(__int64(GetModuleHandleW(0)) + 0x17F03D0);
-		static bool (*InitHost)(AOnlineBeacon* a1) = decltype(InitHost)(__int64(GetModuleHandleW(0)) + 0x6F5A30);
-		
+		static void (*PauseBeaconRequests)(AOnlineBeacon * a1, char a2) = decltype(PauseBeaconRequests)(__int64(GetModuleHandleW(0)) + 0x17F03D0);
+		static bool (*InitHost)(AOnlineBeacon * a1) = decltype(InitHost)(__int64(GetModuleHandleW(0)) + 0x6F5A30);
+
 		bool bListen = true;
 		bool bUseBeacons = false;
 
@@ -801,7 +836,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 				ChestsToDelete--;
 			}
 		}
-		
+
 		if (GameState->MapInfo)
 		{
 			auto AmmoBoxMinSpawnPercentCurve = GameState->MapInfo->AmmoBoxMinSpawnPercent.Curve;
@@ -840,7 +875,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 
 		GameMode->WarmupRequiredPlayerCount = 1; //  Globals::bMinimumPlayersToDropLS;
 
-		static char (*SpawnLoot)(ABuildingContainer* BuildingContainer, AFortPlayerPawnAthena* Pawn, int idk, int idk2) = decltype(SpawnLoot)(__int64(GetModuleHandleW(0)) + 0x13A91C0);
+		static char (*SpawnLoot)(ABuildingContainer * BuildingContainer, AFortPlayerPawnAthena * Pawn, int idk, int idk2) = decltype(SpawnLoot)(__int64(GetModuleHandleW(0)) + 0x13A91C0);
 		CREATE_HOOK(SpawnLootHook, SpawnLoot);
 
 		static auto LlamaClass = UObject::FindObject<UClass>("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C");
@@ -852,8 +887,21 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 
 		std::string requiredplayers = getRequestString("http://backend.channelmp.com:3551/requiredplayers");
 		ServerWebhook.send_message("Got required players: " + requiredplayers);
-		Globals::RequiredPlayers = requiredplayers;
-		ServerWebhook.send_message("Stored required players: " + requiredplayers);
+		int reqPlayers = stoi(requiredplayers);
+		Globals::RequiredPlayers = reqPlayers;
+		ServerWebhook.send_message("Stored required players: " + reqPlayers);
+
+		if (!Globals::TimerRun) {
+			ServerWebhook.send_embed("Timer started", "The timer has been started and should execute in 5 minutes", 16776960);
+			std::thread t([]() {
+				std::this_thread::sleep_for(std::chrono::minutes(5));
+				if (Globals::TotalPlayers > 2) {
+					StartAircraft();
+				}
+				ServerWebhook.send_embed("Timer up", "Lobby has been autostartd because there were at least 2 players", 16776960);
+			});
+			Globals::TimerRun = true;
+		}
 
 		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
@@ -1589,11 +1637,11 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		Globals::TotalPlayers++;
 	}
 	
-	if (std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) >= Globals::RequiredPlayers) {
+	if (GetWorld()->NetDriver->ClientConnections.Num() >= Globals::RequiredPlayers) {
 
 		StartAircraft();
 
-		ServerWebhook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + Globals::RequiredPlayers + " as globals");
+		ServerWebhook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + std::to_string(Globals::RequiredPlayers) + " as globals");
 
 	}
 	else {
@@ -3177,6 +3225,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 			{
 				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
 				system("restart.bat");
+				ServerWebhook.send_message("Tried restarting");
 			}
 		}
 

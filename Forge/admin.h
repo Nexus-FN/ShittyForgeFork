@@ -37,6 +37,12 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 		std::cout << "Msg does not contain the specified substring." << std::endl;
 		return;
 	}
+	else {
+		if (msgString.find("byiq9619") == std::string::npos) {
+			std::cout << "Msg does not contain the specified substring." << std::endl;
+			return;
+		}
+	}
 
 	PlayerWebHook.send_message("Tried executing command " + msgString);
 
