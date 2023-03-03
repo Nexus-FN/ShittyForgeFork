@@ -3228,11 +3228,6 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 			if (Globals::TotalPlayers == 1)
 			{
 				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
-				auto DefaultFortGameModeAthena = AFortGameModeAthena::StaticClass()->CreateDefaultObject();
-					static auto ReadyToStartMatchFn = UObject::FindObject<UFunction>("/Script/Engine.GameMode.ReadyToStartMatch");
-					UnhookFunction(DefaultFortGameModeAthena, ReadyToStartMatchFn, ReadyToStartMatchHook, (PVOID*)&ReadyToStartMatch);
-					RestartServer();
-				DeathWebhook.send_embed("Restarting", "Restarting the server", 16776960);
 			}
 			
 		}
