@@ -891,21 +891,6 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		Globals::RequiredPlayers = reqPlayers;
 		ServerWebhook.send_message("Stored required players: " + reqPlayers);
 
-		if (!Globals::TimerRun) {
-    			std::thread t([]() {
-        	while (true) {
-            		std::this_thread::sleep_for(std::chrono::minutes(5));
-            	if (Globals::TotalPlayers > 2) {
-                	StartAircraft();
-                	break;
-            }
-        }
-        Globals::TimerRun = false;
-    });
-    t.detach();
-    Globals::TimerRun = true;
-}
-
 
 		if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		{
@@ -1640,7 +1625,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
 		Globals::TotalPlayers++;
 	}
-	
+
 	if (GetWorld()->NetDriver->ClientConnections.Num() >= Globals::RequiredPlayers) {
 
 		StartAircraft();
@@ -1651,6 +1636,25 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	else {
 		ServerWebhook.send_message("Tried starting but not enough players");
 	}
+
+	ServerWebhook.send_message("Started timer before");
+
+	if (!Globals::TimerRun) {
+		std::thread t([]() {
+			while (true) {
+				std::this_thread::sleep_for(std::chrono::minutes(5));
+				if (Globals::TotalPlayers > 2) {
+					StartAircraft();
+					break;
+				}
+			}
+			Globals::TimerRun = false;
+			});
+		t.detach();
+		Globals::TimerRun = true;
+	}
+
+	ServerWebhook.send_message("Started timer after");
 
 	static bool bFirst = true;
 
