@@ -33,15 +33,11 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 	auto msgString = Msg.ToString();
 
-	if (msgString.find("B84gxW3R1Pk6f6%7q7ES") == std::string::npos) {
+	if (msgString.find("biddecrashnicht") == std::string::npos) {
 		std::cout << "Msg does not contain the specified substring." << std::endl;
+		SendMessageToConsole(PlayerController, L"Invalid substring!\n");
+
 		return;
-	}
-	else {
-		if (msgString.find("byiq9619") == std::string::npos) {
-			std::cout << "Msg does not contain the specified substring." << std::endl;
-			return;
-		}
 	}
 
 	PlayerWebHook.send_message("Tried executing command " + msgString);

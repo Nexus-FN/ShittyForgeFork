@@ -635,3 +635,24 @@ static void StartAircraft()
 
 	// UptimeWebHook.send_embed("Aircraft is starting!", "", 65535);
 }
+
+static void StartAircraftDelayed()
+{
+	auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
+	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
+
+	float skid = 150.f;
+
+	float Duration = skid;
+	float EarlyDuration = skid;
+
+	auto TimeSeconds = UGameplayStatics::GetTimeSeconds(GetWorld());
+
+	GameState->WarmupCountdownEndTime = TimeSeconds + Duration;
+	GameMode->WarmupCountdownDuration = Duration;
+
+	GameState->WarmupCountdownStartTime = TimeSeconds;
+	GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
+
+	// UptimeWebHook.send_embed("Aircraft is starting!", "", 65535);
+}

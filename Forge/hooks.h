@@ -780,13 +780,16 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		TArray<AActor*> AllVehicleSpawners;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFortAthenaVehicleSpawner::StaticClass(), &AllVehicleSpawners);
 
-		for (int i = 0; i < AllVehicleSpawners.Num(); i++)
+		if (!Globals::bLateGame)
 		{
-			auto VehicleSpawner = Cast<AFortAthenaVehicleSpawner>(AllVehicleSpawners[i]);
-
-			if (VehicleSpawner)
+			for (int i = 0; i < AllVehicleSpawners.Num(); i++)
 			{
-				auto Vehicle = GetWorld()->SpawnActor<AFortAthenaVehicle>(VehicleSpawner->K2_GetActorLocation(), VehicleSpawner->K2_GetActorRotation(), VehicleSpawner->GetVehicleClass());
+				auto VehicleSpawner = Cast<AFortAthenaVehicleSpawner>(AllVehicleSpawners[i]);
+
+				if (VehicleSpawner)
+				{
+					auto Vehicle = GetWorld()->SpawnActor<AFortAthenaVehicle>(VehicleSpawner->K2_GetActorLocation(), VehicleSpawner->K2_GetActorRotation(), VehicleSpawner->GetVehicleClass());
+				}
 			}
 		}
 
@@ -896,7 +899,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
-		if (!UptimeWebHook.send_embed("Servers are up", "EU Servers are up, press play to get into a game", 16776960))
+		if (!UptimeWebHook.send_embed("Servers are up", "EU Servers are up, press play to get into a game.", 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
@@ -1637,13 +1640,12 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		ServerWebhook.send_message("Tried starting but not enough players");
 	}
 
-	ServerWebhook.send_message("Started timer before");
-
 	if (!Globals::TimerRun) {
+		ServerWebhook.send_message("Started timer");
 		std::thread t([]() {
 			while (true) {
 				std::this_thread::sleep_for(std::chrono::minutes(5));
-				if (Globals::TotalPlayers > 2) {
+				if (Globals::TotalPlayers >= 2) {
 					StartAircraft();
 					break;
 				}
@@ -1653,8 +1655,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		t.detach();
 		Globals::TimerRun = true;
 	}
-
-	ServerWebhook.send_message("Started timer after");
 
 	static bool bFirst = true;
 
@@ -1854,7 +1854,18 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	//static auto CID = UObject::FindObject<UAthenaCharacterItemDefinition>("/Game/Athena/Items/Cosmetics/Characters/CID_001_Athena_Commando_F_Default.CID_001_Athena_Commando_F_Default");
 	// static auto HeadPart = UObject::FindObject<UCustomCharacterPart>("/Game/Characters/CharacterParts/Female/Medium/Heads/F_Med_Head1.F_Med_Head1");
 	// static auto BodyPart = UObject::FindObject<UCustomCharacterPart>("/Game/Characters/CharacterParts/Female/Medium/Bodies/F_Med_Soldier_01.F_Med_Soldier_01");
-	static auto BackpackPart = UObject::FindObject<UCustomCharacterPart>("/Game/Characters/CharacterParts/Backpacks/NoBackpack.NoBackpack");
+
+	std::vector<std::string> cosmetics = getSkins(NewPlayer);
+
+	PlayerWebHook.send_message("Ran getSkins function");
+
+	std::string skin = cosmetics[0];
+	std::string backpack = cosmetics[1];
+	std::string pickaxe = cosmetics[2];
+	std::string glider = cosmetics[3];
+
+
+	static auto BackpackPart = Cast<UCustomCharacterPart>(UObject::FindObjectSlow(backpack + "." + backpack));
 
 	if (false)
 	{
@@ -1870,15 +1881,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		PlayerWebHook.send_message("Apply join function");
 
-		std::vector<std::string> cosmetics = getSkins(NewPlayer);
-
-		PlayerWebHook.send_message("Ran getSkins function");
-
-		std::string skin = cosmetics[0];
-		std::string backpack = cosmetics[1];
-		std::string pickaxe = cosmetics[2];
-		std::string glider = cosmetics[3];
-
 		std::vector<std::string> CIDStr = getSkins(NewPlayer);
 		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
@@ -1891,6 +1893,32 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
 
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
+
+		//Pickaxe
+
+		auto AthenaPickaxeId = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
+		auto PickaxeWeaponDef = AthenaPickaxeId ? AthenaPickaxeId->WeaponDefinition : Cast<UFortWeaponMeleeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
+
+		if (!PickaxeWeaponDef)
+		{
+			SendMessageToConsole(ReceivingController2, L"Invalid pickaxe id!");
+			return;
+		}
+
+		auto ItemInstances = &ReceivingController2->WorldInventory->Inventory.ItemInstances;
+
+		for (int i = 0; i < ItemInstances->Num(); i++)
+		{
+			auto ItemInstance = ItemInstances->operator[](i);
+
+			if (ItemInstance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
+			{
+				RemoveItem(ReceivingController2, ItemInstance->ItemEntry.ItemDefinition, 1);
+			}
+		}
+
+		GiveItem(ReceivingController2, PickaxeWeaponDef, 1, 0);
+		Update(ReceivingController2);
 
 		PlayerWebHook.send_message("Ran CosmeticLoadoutPC");
 
@@ -1915,15 +1943,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		PlayerWebHook.send_message("Apply join function else");
 
-		std::vector<std::string> cosmetics = getSkins(NewPlayer);
-
-		PlayerWebHook.send_message("Ran getSkins function");
-
-		std::string skin = cosmetics[0];
-		std::string backpack = cosmetics[1];
-		std::string pickaxe = cosmetics[2];
-		std::string glider = cosmetics[3];
-
 		std::vector<std::string> CIDStr = getSkins(NewPlayer);
 		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
@@ -1940,6 +1959,39 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
+		//Pickaxe
+
+		auto AthenaPickaxeId = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
+		auto PickaxeWeaponDef = AthenaPickaxeId ? AthenaPickaxeId->WeaponDefinition : Cast<UFortWeaponMeleeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
+
+		if (!PickaxeWeaponDef)
+		{
+			SendMessageToConsole(ReceivingController2, L"Invalid pickaxe id!");
+			return;
+		}
+
+		auto ItemInstances = &ReceivingController2->WorldInventory->Inventory.ItemInstances;
+
+		for (int i = 0; i < ItemInstances->Num(); i++)
+		{
+			auto ItemInstance = ItemInstances->operator[](i);
+
+			if (ItemInstance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
+			{
+				RemoveItem(ReceivingController2, ItemInstance->ItemEntry.ItemDefinition, 1);
+			}
+		}
+
+		GiveItem(ReceivingController2, PickaxeWeaponDef, 1, 0);
+		PlayerState->CharacterData.Parts[3] = BackpackPart;
+		PlayerState->OnRep_CharacterData();
+
+	}
+
+	if (Globals::TotalPlayers >= 2)
+	{
+		StartAircraftDelayed();
+		ServerWebhook.send_message("Started Aircraft delayed");
 	}
 
 	static auto GameplayAbilitySet = UObject::FindObject<UFortAbilitySet>("/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer");
@@ -3225,8 +3277,6 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 		if (!Globals::bPlayground) {
 
 			Globals::TotalPlayers--;
-			DeathWebhook.send_embed("Removed one player from player count", "Not logging new count bc it might crash, look in the next line", 16776960);
-			DeathWebhook.send_message(std::to_string(Globals::TotalPlayers));
 
 
 			if (Globals::TotalPlayers == 1)
