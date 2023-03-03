@@ -1894,33 +1894,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
-		//Pickaxe
-
-		auto AthenaPickaxeId = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
-		auto PickaxeWeaponDef = AthenaPickaxeId ? AthenaPickaxeId->WeaponDefinition : Cast<UFortWeaponMeleeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
-
-		if (!PickaxeWeaponDef)
-		{
-			SendMessageToConsole(ReceivingController2, L"Invalid pickaxe id!");
-			return;
-		}
-
-		auto ItemInstances = &ReceivingController2->WorldInventory->Inventory.ItemInstances;
-
-		for (int i = 0; i < ItemInstances->Num(); i++)
-		{
-			auto ItemInstance = ItemInstances->operator[](i);
-
-			if (ItemInstance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
-			{
-				RemoveItem(ReceivingController2, ItemInstance->ItemEntry.ItemDefinition, 1);
-			}
-		}
-
-		GiveItem(ReceivingController2, PickaxeWeaponDef, 1, 0);
-		Update(ReceivingController2);
-
-		PlayerWebHook.send_message("Ran CosmeticLoadoutPC");
 
 		for (int i = 0; i < 7; i++)
 		{
@@ -1958,33 +1931,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		PlayerWebHook.send_message("Ran CosmeticLoadoutPC else");
 
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
-
-		//Pickaxe
-
-		auto AthenaPickaxeId = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
-		auto PickaxeWeaponDef = AthenaPickaxeId ? AthenaPickaxeId->WeaponDefinition : Cast<UFortWeaponMeleeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
-
-		if (!PickaxeWeaponDef)
-		{
-			SendMessageToConsole(ReceivingController2, L"Invalid pickaxe id!");
-			return;
-		}
-
-		auto ItemInstances = &ReceivingController2->WorldInventory->Inventory.ItemInstances;
-
-		for (int i = 0; i < ItemInstances->Num(); i++)
-		{
-			auto ItemInstance = ItemInstances->operator[](i);
-
-			if (ItemInstance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
-			{
-				RemoveItem(ReceivingController2, ItemInstance->ItemEntry.ItemDefinition, 1);
-			}
-		}
-
-		GiveItem(ReceivingController2, PickaxeWeaponDef, 1, 0);
-		PlayerState->CharacterData.Parts[3] = BackpackPart;
-		PlayerState->OnRep_CharacterData();
 
 	}
 
