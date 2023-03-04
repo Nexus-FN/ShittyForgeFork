@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <random>
 #include <filesystem>
+#include <iostream>
+#include <fstream>
+#include "json.hpp"
 
 #include "discord.h"
 
@@ -482,9 +485,47 @@ inline void RestartServer()
 
 static UFortPlaylistAthena* GetPlaylistToUse()
 {
+
+		using json = nlohmann::json;
+
+		std::ifstream file("config.json");
+		json data;
+		file >> data;
+
+		std::string line = data["playlist"];
+
+		//turn string into boolean
+		if (line == "creative")
+		{
+			Globals::bCreative = true;
+			Globals::bLateGame = false;
+			Globals::bPlayground = false;
+		}
+		else if (line == "playground")
+		{
+			Globals::bPlayground = true;
+			Globals::bLateGame = false;
+			Globals::bCreative = false;
+		}
+		else if (line == "lategame")
+		{
+			Globals::bLateGame = true;
+			Globals::bPlayground = false;
+			Globals::bCreative = false;
+		}
+		else if (line == "solo")
+		{
+			Globals::bPlayground = false;
+			Globals::bLateGame = false;
+			Globals::bCreative = false;
+		}
+
+
+
+
 	UFortPlaylistAthena* Playlist = Globals::bCreative ? UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Creative/Playlist_PlaygroundV2.Playlist_PlaygroundV2") :
 		(Globals::bPlayground ? UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playground/Playlist_Playground.Playlist_Playground") :
-			UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo")
+			UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playlist_DefaultDuo.Playlist_DefaultDuo")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/gg/Playlist_Gg_Reverse.Playlist_Gg_Reverse")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playlist_DefaultDuo.Playlist_DefaultDuo")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Trios/Playlist_Trios.Playlist_Trios")
