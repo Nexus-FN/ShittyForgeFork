@@ -29,7 +29,10 @@ DWORD WINAPI InputThread(LPVOID)
 
         else if (GetAsyncKeyState(VK_F3) & 1)
         {
-            FillVendingMachines();
+            if(!Globals::bLateGame)
+            {
+                FillVendingMachines();
+            }
         }
 
         Sleep(1000 / 30);
