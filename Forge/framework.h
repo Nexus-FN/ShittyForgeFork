@@ -486,6 +486,13 @@ inline void RestartServer()
 static UFortPlaylistAthena* GetPlaylistToUse()
 {
 
+	if (!std::ifstream("config.json"))
+	{
+			std::ofstream file("config.json");
+			file << "{\n\t\"playlist\": \"lategame\"\n}";
+			file.close();
+		}
+
 		using json = nlohmann::json;
 
 		std::ifstream file("config.json");
