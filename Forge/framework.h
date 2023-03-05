@@ -542,8 +542,6 @@ static UFortPlaylistAthena* GetPlaylistToUse()
 
 		Globals::mode = line;
 
-		ServerWebhook.send_message("Server started with " + Globals::mode);
-
 		auto playlist = secondLine;
 
 		UFortPlaylistAthena* Playlist = UObject::FindObject<UFortPlaylistAthena>(playlist);
