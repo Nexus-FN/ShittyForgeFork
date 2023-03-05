@@ -901,6 +901,12 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
 
+		//For development
+		if (!ServerWebhook.send_message("Server is up for development"))
+		{
+			
+		}
+
 		//Added automatic server database entries and PID updating
 		std::string pid = std::to_string(GetCurrentProcessId());
 
