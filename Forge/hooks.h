@@ -895,7 +895,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		//{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		//}
-		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. \n\nMode: " + Globals::mode, 16776960));
+		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
@@ -3214,7 +3214,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
 				UptimeWebHook.send_message("Match ended, starting a new one...");
 
-				system("python Desktop\\ZetaxKannKeinAutoRestart\\main.py");
+				printf("lastmanstanding");
 
 			}
 			

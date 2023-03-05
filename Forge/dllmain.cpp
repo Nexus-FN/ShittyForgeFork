@@ -41,11 +41,11 @@ DWORD WINAPI InputThread(LPVOID)
 
 DWORD WINAPI Main(LPVOID)
 {
-    AllocConsole();
-    FILE* fptr;
-    freopen_s(&fptr, "CONOUT$", "w+", stdout);
+    //AllocConsole();
+    //FILE* fptr;
+    //freopen_s(&fptr, "CONOUT$", "w+", stdout);
 
-    SetConsoleTitleA("Channel Server");
+    //SetConsoleTitleA("Channel Server");
 
     std::ios::sync_with_stdio(false);
 
