@@ -21,6 +21,8 @@
 #include "json.hpp"
 #include <cstdlib>
 
+std::atomic<bool> g_bExit(false);
+
 using json = nlohmann::json;
 
 void (*ProcessEvent)(UObject* Object, UFunction* Function, void* Parameters) = decltype(ProcessEvent)((uintptr_t)GetModuleHandleW(0) + 0x22f2990);
