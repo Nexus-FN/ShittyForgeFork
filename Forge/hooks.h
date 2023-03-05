@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include <thread>
 #include <chrono>
 #include <windows.h>
@@ -3175,7 +3175,6 @@ void restartServer()
 {
 	Sleep(1000);
 	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
-	Sleep(5000);
 }
 
 //Comment so I can find this later
@@ -3216,27 +3215,30 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 		DeadPlayerState->DeathInfo = DeathInfo;
 		DeadPlayerState->OnRep_DeathInfo();
 
-		PlayerWebHook.send_message("Player died. Count is now total " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
+		PlayerWebHook.send_message("Player died. Total connections are now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
 
 		if (!Globals::bPlayground) {
+
+			DeathWebhook.send_message("GameState->PlayersLeft-- equals " + GameState->PlayersLeft);
 
 			Globals::TotalPlayers--;
 
 			if (Globals::TotalPlayers == 0)
 			{
-				//RestartServer();
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
-				UptimeWebHook.send_message("Match ended, starting a new one...");
+				
+				//Will add again on production
+				//UptimeWebHook.send_message("Match ended, starting a new one...");
 
 				SetConsoleTitleA("Restarting server");
 
-				DeathWebhook.send_message("Restarting server in 1 seconds");
+				DeathWebhook.send_message("Restarting server in 1 second");
 				std::thread t1(restartServer);
 				DeathWebhook.send_message("Restarting hopefully worked");
 
 			}
 			else {
-				DeathWebhook.send_message(std::to_string(Globals::TotalPlayers));
+				DeathWebhook.send_message("Restart did not work, " + std::to_string(Globals::TotalPlayers));
 			}
 			
 		}
