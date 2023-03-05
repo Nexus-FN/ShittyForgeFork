@@ -594,7 +594,6 @@ static bool setPid(std::string pid) {
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_body);
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
-		PlayerWebHook.send_message("PID API request successful result:" + response_body);
 		return response_body;
 	}
 	else {
@@ -884,22 +883,18 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		static auto LlamaClass = UObject::FindObject<UClass>("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C");
 		// std::cout << "NetServerMaxTickRate: " << GetWorld()->NetDriver->NetServerMaxTickRate << '\n';
 
-		ServerWebhook.send_message("Trying to get required players");
 		auto playlistForUptime = GetPlaylistToUse(); // GameState->CurrentPlaylistInfo.BasePlaylist
-		ServerWebhook.send_message("Trying to get required players (After playlist)");
 
 		std::string requiredplayers = getRequestString("http://backend.channelmp.com:3551/requiredplayers");
-		ServerWebhook.send_message("Got required players: " + requiredplayers);
 		int reqPlayers = stoi(requiredplayers);
 		Globals::RequiredPlayers = reqPlayers;
-		ServerWebhook.send_message("Stored required players: " + reqPlayers);
 
 
 		//if (!UptimeWebHook.send_message("<@&1079389601438912592>"))
 		//{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		//}
-		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game.", 16776960));
+		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. \n\nMode: " + Globals::mode, 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
@@ -1016,7 +1011,7 @@ void ServerAcknowledgePossessionHook(APlayerController* PlayerController, APawn*
 		PawnAsAthena->OnRep_CosmeticLoadout();
 
 		ApplyCID(PlayerState, PawnAsAthena->CosmeticLoadout.Character, PawnAsAthena);
-		// ApplyCustomizationToCharacter(PlayerState);
+		//ApplyCustomizationToCharacter(PlayerState);
 	}
 }
 
@@ -1221,7 +1216,7 @@ void ServerAttemptAircraftJumpHook(AFortPlayerController* PlayerController, FRot
 		static auto Light = UObject::FindObject<UFortItemDefinition>("/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsLight.AthenaAmmoDataBulletsLight");
 		static auto Heavy = UObject::FindObject<UFortItemDefinition>("/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsHeavy.AthenaAmmoDataBulletsHeavy");
 
-		//Arena ammunition
+		//Arena ammunition + comment so I can find it later
 		GiveItem(PlayerController, WoodItemData, 500);
 		GiveItem(PlayerController, StoneItemData, 400);
 		GiveItem(PlayerController, MetalItemData, 350);
@@ -1598,7 +1593,6 @@ std::vector<std::string> getSkins(AFortPlayerControllerAthena* NewPlayer)
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
 		json response_json = json::parse(response_body);
-		PlayerWebHook.send_message("Player " + replacedUsername + " joined the game with " + response_json["skin"].get<std::string>() + response_json["backpack"].get<std::string>());
 
 		std::string skin = response_json["skin"].get<std::string>();
 		std::string backpack = response_json["backpack"].get<std::string>();
@@ -1620,12 +1614,12 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	if (IsBannedAPI(NewPlayer) == true)
 	{
 		KickPlayer(NewPlayer, L"You can't join, you're banned!");
-		PlayerWebHook.send_message("**" + username + "**" + " joined! They are banned!");
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned!" + Globals::pid);
 		return;
 	}
 	else
 	{
-		PlayerWebHook.send_message("**" + username + "**" + " joined! They are not banned!");
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are not banned!" + Globals::pid);
 		Globals::TotalPlayers++;
 	}
 
@@ -1633,15 +1627,9 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		StartAircraft();
 
-		ServerWebhook.send_message("Tried starting match with " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()) + " players. Required are " + std::to_string(Globals::RequiredPlayers) + " as globals");
-
-	}
-	else {
-		ServerWebhook.send_message("Tried starting but not enough players");
 	}
 
 	if (!Globals::TimerRun) {
-		ServerWebhook.send_message("Started timer");
 		std::thread t([]() {
 			while (true) {
 				std::this_thread::sleep_for(std::chrono::minutes(5));
@@ -1683,7 +1671,10 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		AddHook(OnSafeZoneStateChangeFn, OnSafeZoneStateChangeHook);
 
 		SpawnFloorLoot();
-		FillVendingMachines();
+		if (!Globals::bLateGame)
+		{
+			FillVendingMachines();
+		}
 
 		TArray<AActor*> AllBGASpawners;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABGAConsumableSpawner::StaticClass(), &AllBGASpawners);
@@ -1857,8 +1848,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 	std::vector<std::string> cosmetics = getSkins(NewPlayer);
 
-	PlayerWebHook.send_message("Ran getSkins function");
-
 	std::string skin = cosmetics[0];
 	std::string backpack = cosmetics[1];
 	std::string pickaxe = cosmetics[2];
@@ -1866,6 +1855,8 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 
 	static auto BackpackPart = Cast<UCustomCharacterPart>(UObject::FindObjectSlow(backpack + "." + backpack));
+
+	auto Pawn = Cast<AFortPlayerPawnAthena>(NewPlayer->Pawn);
 
 	if (false)
 	{
@@ -1878,8 +1869,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 		auto PlayerState2 = Cast<AFortPlayerState>(ReceivingController2->PlayerState);
 
 		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
-
-		PlayerWebHook.send_message("Apply join function");
 
 		std::vector<std::string> CIDStr = getSkins(NewPlayer);
 		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
@@ -1914,21 +1903,15 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 
 		auto Pawn2 = Cast<AFortPlayerPawnAthena>(ReceivingController2->Pawn);
 
-		PlayerWebHook.send_message("Apply join function else");
-
 		std::vector<std::string> CIDStr = getSkins(NewPlayer);
 		auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
-
-		ServerWebhook.send_message("skin is " + skin + backpack + pickaxe + glider);
 
 		NewPlayer->CosmeticLoadoutPC.Character = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(skin + "." + skin));
 		NewPlayer->CosmeticLoadoutPC.Glider = Cast<UAthenaGliderItemDefinition>(UObject::FindObjectSlow(glider + "." + glider));
 		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxe + "." + pickaxe));
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
-
-		PlayerWebHook.send_message("Ran CosmeticLoadoutPC else");
 
 		ApplyCID(PlayerState2, CIDDef, Pawn2);
 
@@ -1937,7 +1920,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	if (Globals::TotalPlayers >= 2)
 	{
 		StartAircraftDelayed();
-		ServerWebhook.send_message("Started Aircraft delayed");
 	}
 
 	static auto GameplayAbilitySet = UObject::FindObject<UFortAbilitySet>("/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer");
@@ -3227,7 +3209,18 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 
 			if (Globals::TotalPlayers == 1)
 			{
+				//RestartServer();
 				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
+				UptimeWebHook.send_message("Match ended, starting a new one...");
+
+				auto AlivePlayers = GetAlivePlayers();
+
+				auto PlayerController = Cast<AFortPlayerControllerAthena>(AlivePlayers[0]);
+
+				auto PlayerName = PlayerController->PlayerState->PlayerName;
+
+				system("python Desktop\\ZetaxKannKeinAutoRestart\\main.py");
+
 			}
 			
 		}
@@ -3251,7 +3244,21 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 			float addedHealth = health + 50;
 
 			KillerPawn->SetHealth(addedHealth);
-			KillerPawn->SetShield(50);
+
+			KillerPawn->SetShield(KillerPawn->GetShield() + 50);
+
+			auto KillerPlayerState = Cast<AFortPlayerStateAthena>(DeathReport.KillerPlayerState);
+
+			auto KillerPlayerController = Cast<AFortPlayerControllerAthena>(KillerPlayerState->GetOwner());
+
+			static auto StoneItemData = UObject::FindObject<UFortItemDefinition>("/Game/Items/ResourcePickups/StoneItemData.StoneItemData");
+			static auto WoodItemData = UObject::FindObject<UFortItemDefinition>("/Game/Items/ResourcePickups/WoodItemData.WoodItemData");
+			static auto MetalItemData = UObject::FindObject<UFortItemDefinition>("/Game/Items/ResourcePickups/MetalItemData.MetalItemData");
+
+			GiveItem(KillerPlayerController, WoodItemData, 50);
+			GiveItem(KillerPlayerController, StoneItemData, 50);
+			GiveItem(KillerPlayerController, MetalItemData, 50);
+
 
 			if (false)
 			{

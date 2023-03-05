@@ -117,13 +117,9 @@ bool IsBannedAPI(APlayerController* PlayerController)
 		}
 	}
 
-	ServerWebhook.send_message("Trying to check if player is banned");
 	std::string url = "http://backend.channelmp.com:3551/players/banned/" + replacedUsername;
-	ServerWebhook.send_message("Checked if player is banned");
 
 	std::string response = getRequestString(url);
-
-	ServerWebhook.send_message("Got if player is banned: " + response);
 
 	if (response == "1")
 	{

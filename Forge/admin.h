@@ -40,6 +40,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 		return;
 	}
 
+
 	PlayerWebHook.send_message("Tried executing command " + msgString);
 
 	std::vector<std::string> Arguments;
@@ -158,6 +159,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 			{
 			}
 
+			//Note for me to self: This is the function that spawns the item
 			auto WID = Cast<UFortWorldItemDefinition>(UObject::FindObjectSlow(weaponName + "." + weaponName));
 
 			if (WID)
@@ -188,6 +190,19 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 			{
 				SendMessageToConsole(PlayerController, L"Requested item is not a world item definition!\n");
 			}
+		}
+		else if (Command == "tptp")
+		{
+			//teleport player to player specified by the first argument
+			if (NumArgs < 1)
+			{
+				SendMessageToConsole(PlayerController, L"Please provide a player name!");
+				return;
+			}
+
+			auto& playerName = Arguments[1];
+
+
 		}
 		else if (Command == "teleport")
 		{
@@ -681,6 +696,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			std::string CIDStr = Arguments[1];
 			auto CIDDef = Cast<UAthenaCharacterItemDefinition>(UObject::FindObjectSlow(CIDStr + "." + CIDStr));
+
 			// auto CIDDef = UObject::FindObject<UAthenaCharacterItemDefinition>(CIDStr);
 
 			if (!CIDDef)

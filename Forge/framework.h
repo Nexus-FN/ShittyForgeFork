@@ -287,6 +287,7 @@ static void ApplyCID(AFortPlayerState* PlayerState, UAthenaCharacterItemDefiniti
 	PlayerState->OnRep_CharacterData();
 }
 
+
 static AFortWorldSettings* GetFortWorldSettings(UWorld* World, bool bCheckStreamingPersistent = false, bool bChecked = true)
 {
 	return Cast<AFortWorldSettings>(GetWorld()->K2_GetWorldSettings());
@@ -427,6 +428,7 @@ namespace Globals
 	static int RequiredPlayers = 10;
 	static std::string pid = "0";
 	static bool TimerRun = false;
+	static std::string mode = "Solo";
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;
@@ -501,45 +503,55 @@ static UFortPlaylistAthena* GetPlaylistToUse()
 
 		std::string line = data["playlist"];
 
+		std::string secondLine = data["advancedplaylist"];
+
 		//turn string into boolean
-		if (line == "creative")
+		if (line == "Creative")
 		{
 			Globals::bCreative = true;
 			Globals::bLateGame = false;
 			Globals::bPlayground = false;
 		}
-		else if (line == "playground")
+		else if (line == "Playground")
 		{
 			Globals::bPlayground = true;
 			Globals::bLateGame = false;
 			Globals::bCreative = false;
 		}
-		else if (line == "lategame")
+		else if (line == "Lategame Solo")
 		{
 			Globals::bLateGame = true;
 			Globals::bPlayground = false;
 			Globals::bCreative = false;
 		}
-		else if (line == "solo")
+		else if (line == "Solo")
 		{
 			Globals::bPlayground = false;
 			Globals::bLateGame = false;
 			Globals::bCreative = false;
+			Globals::bSiphonEnabled = false;
+		}
+		else if (line == "Oneshot Solo")
+		{
+			Globals::bPlayground = false;
+			Globals::bLateGame = false;
+			Globals::bCreative = false;
+			Globals::bSiphonEnabled = false;
 		}
 
+		Globals::mode = line;
 
+		ServerWebhook.send_message("Server started with " + Globals::mode);
 
+		auto playlist = secondLine;
 
-	UFortPlaylistAthena* Playlist = Globals::bCreative ? UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Creative/Playlist_PlaygroundV2.Playlist_PlaygroundV2") :
-		(Globals::bPlayground ? UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playground/Playlist_Playground.Playlist_Playground") :
-			UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo")
+		UFortPlaylistAthena* Playlist = UObject::FindObject<UFortPlaylistAthena>(playlist);
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/gg/Playlist_Gg_Reverse.Playlist_Gg_Reverse")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Playlist_DefaultDuo.Playlist_DefaultDuo")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Trios/Playlist_Trios.Playlist_Trios")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Low/Playlist_Low_Solo.Playlist_Low_Solo")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Music/Playlist_Music_High.Playlist_Music_High")
 			// UObject::FindObject<UFortPlaylistAthena>("/Game/Athena/Playlists/Ashton/Playlist_Ashton_Lg.Playlist_Ashton_Lg")
-			);
 
 	return Playlist;
 }
