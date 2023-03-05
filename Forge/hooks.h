@@ -907,11 +907,11 @@ bool ReadyToStartMatchHook(AFortGameModeAthena* GameMode)
 		if (setPid(pid))
 		{
 			Globals::pid = pid;
-			ServerWebhook.send_embed("Updated server", "New data : **Online** and pid " + pid, 16776960);
+			ServerWebhook.send_embed("Updated server", "New data: **Online** and pid " + pid, 16776960);
 		}
 		else
 		{
-			ServerWebhook.send_embed("Failed updated server", "New data : **Unknown** and no pid ", 16776960);
+			ServerWebhook.send_embed("Failed updated server", "New data: **Unknown** and no pid ", 16776960);
 		}
 
 		auto PlaylistToUse = GetPlaylistToUse();
@@ -1616,12 +1616,12 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	if (IsBannedAPI(NewPlayer) == true)
 	{
 		KickPlayer(NewPlayer, L"You can't join, you're banned!");
-		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned!" + Globals::pid);
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned! pid: " + Globals::pid);
 		return;
 	}
 	else
 	{
-		PlayerWebHook.send_message("**" + username + "**" + " joined, they are not banned!" + Globals::pid);
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are not banned! pid: " + Globals::pid);
 		Globals::TotalPlayers++;
 	}
 
