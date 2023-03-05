@@ -1,4 +1,5 @@
 #pragma once
+#include <windows.h>
 #include <atomic>
 #include "framework.h"
 
@@ -1635,7 +1636,11 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 			while (true) {
 				std::this_thread::sleep_for(std::chrono::minutes(5));
 				if (Globals::TotalPlayers >= 2) {
-					StartAircraft();
+					if (!Globals::timerHasRun)
+					{
+						StartAircraft();
+						Globals::timerHasRun = true;
+					}
 					break;
 				}
 			}
@@ -3211,10 +3216,12 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 			if (Globals::TotalPlayers == 1)
 			{
 				//RestartServer();
-				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
+				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
 				UptimeWebHook.send_message("Match ended, starting a new one...");
-
-				printf("lastmanstanding");
+				system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
+				Sleep(5000);
+				DeathWebhook.send_message("Restarting hopefully worked");
+				exit(0);
 
 			}
 			
