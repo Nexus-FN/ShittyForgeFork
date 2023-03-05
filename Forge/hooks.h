@@ -1,4 +1,6 @@
 #pragma once
+#include <thread>
+#include <chrono>
 #include <windows.h>
 #include <atomic>
 #include "framework.h"
@@ -3170,6 +3172,14 @@ void OnBuildingActorInitializedHook(ABuildingActor* BuildingActor, TEnumAsByte<E
 	return OnBuildingActorInitialized(BuildingActor, InitializationReason, BuildingPersistentState);
 }
 
+
+void restartServer()
+{
+	Sleep(1000);
+	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
+	Sleep(5000);
+}
+
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
@@ -3208,21 +3218,27 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 		DeadPlayerState->DeathInfo = DeathInfo;
 		DeadPlayerState->OnRep_DeathInfo();
 
+		PlayerWebHook.send_message("Player died. Count is now total " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
+
 		if (!Globals::bPlayground) {
 
 			Globals::TotalPlayers--;
 
-
-			if (Globals::TotalPlayers == 1)
+			if (Globals::TotalPlayers == 0)
 			{
 				//RestartServer();
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
 				UptimeWebHook.send_message("Match ended, starting a new one...");
-				system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
-				Sleep(5000);
-				DeathWebhook.send_message("Restarting hopefully worked");
-				exit(0);
 
+				SetConsoleTitleA("Restarting server");
+
+				DeathWebhook.send_message("Restarting server in 1 seconds");
+				std::thread t1(restartServer);
+				DeathWebhook.send_message("Restarting hopefully worked");
+
+			}
+			else {
+				DeathWebhook.send_message(std::to_string(Globals::TotalPlayers));
 			}
 			
 		}
