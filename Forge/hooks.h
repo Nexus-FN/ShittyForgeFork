@@ -1615,12 +1615,12 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	if (IsBannedAPI(NewPlayer) == true)
 	{
 		KickPlayer(NewPlayer, L"You can't join, you're banned!");
-		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned!" + Globals::pid);
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned! pid: " + Globals::pid);
 		return;
 	}
 	else
 	{
-		PlayerWebHook.send_message("**" + username + "**" + " joined, they are not banned!" + Globals::pid);
+		PlayerWebHook.send_message("**" + username + "**" + " joined, they are not banned! pid: " + Globals::pid);
 		Globals::TotalPlayers++;
 	}
 
