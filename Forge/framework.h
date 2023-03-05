@@ -695,7 +695,10 @@ static void StartAircraft()
 	GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
 
 	// UptimeWebHook.send_embed("Aircraft is starting!", "", 65535);
-	UptimeWebHook.send_message("Match started! Wait for a new one to start.");
+
+
+	//Adding back in production
+	//UptimeWebHook.send_message("Match started! Wait for a new one to start.");
 }
 
 static void StartAircraftDelayed()
