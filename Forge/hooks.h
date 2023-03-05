@@ -16,6 +16,7 @@
 #include <curl/curl.h>
 
 #include "json.hpp"
+#include <cstdlib>
 
 std::atomic<bool> g_bExit(false);
 
@@ -3212,12 +3213,6 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena* DeadPlayerController, FFo
 				//RestartServer();
 				DeathWebhook.send_embed("Last man", "Last man standing" + std::to_string(Globals::TotalPlayers), 16776960);
 				UptimeWebHook.send_message("Match ended, starting a new one...");
-
-				auto AlivePlayers = GetAlivePlayers();
-
-				auto PlayerController = Cast<AFortPlayerControllerAthena>(AlivePlayers[0]);
-
-				auto PlayerName = PlayerController->PlayerState->PlayerName;
 
 				system("python Desktop\\ZetaxKannKeinAutoRestart\\main.py");
 
