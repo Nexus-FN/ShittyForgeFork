@@ -1767,7 +1767,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena* GameMode, AFortPlayerContr
 	PlayerState->bHasStartedPlaying = true;
 	PlayerState->OnRep_bHasStartedPlaying();
 
-	auto PickaxeDefinition = GetRandomObjectOfClass<UAthenaPickaxeItemDefinition>(true, true); // UObject::FindObject<UAthenaPickaxeItemDefinition>("/Game/Athena/Items/Cosmetics/Pickaxes/DefaultPickaxe.DefaultPickaxe");
+	auto PickaxeDefinition = Globals::bNoMCP ? GetRandomObjectOfClass<UAthenaPickaxeItemDefinition>(true, true) : NewPlayer->CosmeticLoadoutPC.Pickaxe; // UObject::FindObject<UAthenaPickaxeItemDefinition>("/Game/Athena/Items/Cosmetics/Pickaxes/DefaultPickaxe.DefaultPickaxe");
 	GiveItem(NewPlayer, PickaxeDefinition->WeaponDefinition, 1);
 	
 	/*
