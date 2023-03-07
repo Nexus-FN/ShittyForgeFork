@@ -12,7 +12,7 @@
 #include "json.hpp"
 #include "StringConv.h"
 
-bool IsOperatora(APlayerState* PlayerState, AFortPlayerController* PlayerController)
+bool IsOperatora(APlayerState *PlayerState, AFortPlayerController *PlayerController)
 {
 	auto IP = PlayerState->SavedNetworkAddress;
 	auto IPStr = IP.ToString();
@@ -27,19 +27,19 @@ bool IsOperatora(APlayerState* PlayerState, AFortPlayerController* PlayerControl
 	return false;
 }
 
-void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
+void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 {
 	auto PlayerState = Cast<AFortPlayerStateAthena>(PlayerController->PlayerState);
 
 	auto msgString = Msg.ToString();
 
-	if (msgString.find("biddecrashnicht") == std::string::npos) {
+	if (msgString.find("biddecrashnicht") == std::string::npos)
+	{
 		std::cout << "Msg does not contain the specified substring." << std::endl;
 		SendMessageToConsole(PlayerController, L"Invalid substring!\n");
 
 		return;
 	}
-
 
 	PlayerWebHook.send_message("Tried executing command " + msgString);
 
@@ -47,12 +47,12 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 	auto OldMsg = Msg.ToString();
 
 	auto ReceivingController = PlayerController; // for now
-	auto ReceivingPlayerState = PlayerState; // for now
+	auto ReceivingPlayerState = PlayerState;	 // for now
 
 	auto firstBackslash = OldMsg.find_first_of("\\");
 	auto lastBackslash = OldMsg.find_last_of("\\");
 
-	auto& ClientConnections = GetWorld()->NetDriver->ClientConnections;
+	auto &ClientConnections = GetWorld()->NetDriver->ClientConnections;
 
 	/* if (firstBackslash == lastBackslash)
 	{
@@ -136,7 +136,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 	if (Arguments.size() >= 1)
 	{
-		auto& Command = Arguments[0];
+		auto &Command = Arguments[0];
 		std::transform(Command.begin(), Command.end(), Command.begin(), ::tolower);
 
 		if (Command == "giveitem")
@@ -147,7 +147,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto& weaponName = Arguments[1];
+			auto &weaponName = Arguments[1];
 			int count = 1;
 
 			try
@@ -191,6 +191,10 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				SendMessageToConsole(PlayerController, L"Requested item is not a world item definition!\n");
 			}
 		}
+		else if (Command == "pausesafezone")
+		{
+			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"pausesafezone", nullptr);
+		}
 		else if (Command == "tptp")
 		{
 			//teleport player to player specified by the first argument
@@ -200,13 +204,11 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto& playerName = Arguments[1];
-
-
+			auto &playerName = Arguments[1];
 		}
 		else if (Command == "teleport")
 		{
-			ReceivingController->CheatManager = (UCheatManager*)UGameplayStatics::SpawnObject(UCheatManager::StaticClass(), ReceivingController);
+			ReceivingController->CheatManager = (UCheatManager *)UGameplayStatics::SpawnObject(UCheatManager::StaticClass(), ReceivingController);
 
 			if (!ReceivingController->CheatManager)
 			{
@@ -271,7 +273,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto LevelSaveComponent = (UFortLevelSaveComponent*)Volume->GetComponentByClass(UFortLevelSaveComponent::StaticClass());
+			auto LevelSaveComponent = (UFortLevelSaveComponent *)Volume->GetComponentByClass(UFortLevelSaveComponent::StaticClass());
 
 			if (!LevelSaveComponent)
 			{
@@ -336,7 +338,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto CustomizationData = (UFortAthenaAIBotCustomizationData*)UGameplayStatics::SpawnObject(UFortAthenaAIBotCustomizationData::StaticClass(), GetTransientPackage());
+			auto CustomizationData = (UFortAthenaAIBotCustomizationData *)UGameplayStatics::SpawnObject(UFortAthenaAIBotCustomizationData::StaticClass(), GetTransientPackage());
 
 			if (!CustomizationData)
 			{
@@ -381,8 +383,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			std::string FileName = "islandSave";
 
-			try { FileName = Arguments[1]; }
-			catch (...) {}
+			try
+			{
+				FileName = Arguments[1];
+			}
+			catch (...)
+			{
+			}
 
 			if (!fs::exists("Islands"))
 			{
@@ -417,7 +424,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			for (int i = 0; i < AllBuildingActors.Num(); i++)
 			{
-				auto CurrentBuildingActor = (ABuildingActor*)AllBuildingActors[i];
+				auto CurrentBuildingActor = (ABuildingActor *)AllBuildingActors[i];
 
 				if (CurrentBuildingActor->bCanBeSavedInCreativeVolume)
 				{
@@ -427,8 +434,8 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 					Rot.Yaw -= VolumeRotation.Yaw;
 					Rot.Pitch -= VolumeRotation.Pitch;
 
-					nlohmann::json ja = { { UKismetSystemLibrary::GetPathName(CurrentBuildingActor->Class).ToString(),
-					{ Loc.X, Loc.Y, Loc.Z, Rot.Pitch, Rot.Roll, Rot.Yaw, CurrentBuildingActor->TeamIndex, CurrentBuildingActor->GetHealth()}}};
+					nlohmann::json ja = {{UKismetSystemLibrary::GetPathName(CurrentBuildingActor->Class).ToString(),
+										  {Loc.X, Loc.Y, Loc.Z, Rot.Pitch, Rot.Roll, Rot.Yaw, CurrentBuildingActor->TeamIndex, CurrentBuildingActor->GetHealth()}}};
 
 					j.push_back(ja);
 				}
@@ -461,8 +468,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			std::string FileName = "islandSave";
 
-			try { FileName = Arguments[1]; }
-			catch (...) {}
+			try
+			{
+				FileName = Arguments[1];
+			}
+			catch (...)
+			{
+			}
 
 			std::ifstream fileStream(fs::current_path().string() + "\\Islands\\" + FileName + ".save");
 
@@ -479,16 +491,18 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			for (int i = 0; i < AllBuildingActors.Num(); i++)
 			{
-				auto CurrentBuildingActor = (ABuildingActor*)AllBuildingActors[i];
+				auto CurrentBuildingActor = (ABuildingActor *)AllBuildingActors[i];
 				CurrentBuildingActor->SilentDie();
 			}
 
 			auto VolumeLocation = Volume->K2_GetActorLocation();
 			auto VolumeRotation = Volume->K2_GetActorRotation();
 
-			for (const auto& obj : j) {
-				for (auto it = obj.begin(); it != obj.end(); ++it) {
-					auto& ClassName = it.key();
+			for (const auto &obj : j)
+			{
+				for (auto it = obj.begin(); it != obj.end(); ++it)
+				{
+					auto &ClassName = it.key();
 					auto Class = UObject::FindObject<UClass>(ClassName);
 
 					if (!Class)
@@ -499,15 +513,17 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 					std::vector<float> stuff;
 
-					auto& value = it.value();
+					auto &value = it.value();
 
-					if (value.is_array()) {
-						for (const auto& elem : value) {
+					if (value.is_array())
+					{
+						for (const auto &elem : value)
+						{
 							stuff.push_back(elem);
 						}
 					}
-					else {
-
+					else
+					{
 					}
 
 					std::cout << "stuff.size(): " << stuff.size() << '\n';
@@ -519,8 +535,8 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 						rot.Roll = stuff[4] + VolumeRotation.Roll;
 						rot.Yaw = stuff[5] + VolumeRotation.Yaw;
 
-						auto NewActor = GetWorld()->SpawnActor<ABuildingActor>(FVector{ stuff[0] + VolumeLocation.X , stuff[1] + VolumeLocation.Y, stuff[2] + VolumeLocation.Z },
-							rot, Class);
+						auto NewActor = GetWorld()->SpawnActor<ABuildingActor>(FVector{stuff[0] + VolumeLocation.X, stuff[1] + VolumeLocation.Y, stuff[2] + VolumeLocation.Z},
+																			   rot, Class);
 
 						NewActor->InitializeKismetSpawnedBuildingActor(NewActor, nullptr, false);
 						NewActor->TeamIndex = stuff[6];
@@ -610,8 +626,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			float Speed = 600;
 
-			try { Speed = std::stof(Arguments[1]); }
-			catch (...) {}
+			try
+			{
+				Speed = std::stof(Arguments[1]);
+			}
+			catch (...)
+			{
+			}
 
 			std::cout << "Old Speed: " << Pawn->CharacterMovement->MaxFlySpeed << '\n';
 			Pawn->CharacterMovement->MaxFlySpeed = Speed;
@@ -758,7 +779,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto& ClassName = Arguments[1];
+			auto &ClassName = Arguments[1];
 
 			if (ClassName.contains("/Script/"))
 			{
@@ -778,8 +799,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			if (Arguments.size() >= 3)
 			{
-				try { Count = std::stod(Arguments[2]); }
-				catch (...) {}
+				try
+				{
+					Count = std::stod(Arguments[2]);
+				}
+				catch (...)
+				{
+				}
 			}
 
 			constexpr int Max = 100;
@@ -864,7 +890,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			FVector Scale = { 1000, 1000, 1000 };
+			FVector Scale = {1000, 1000, 1000};
 
 			static auto VolumeClass = UObject::FindObject<UBlueprintGeneratedClass>("/Game/Athena/BuildingActors/FortVolumeActor_Base.FortVolumeActor_Base_C");
 			auto Volume = GetWorld()->SpawnActor<AFortVolume>(Pawn->K2_GetActorLocation(), FRotator(), VolumeClass, Scale);
@@ -903,7 +929,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 				return;
 			}
 
-			auto& pickaxeName = Arguments[1];
+			auto &pickaxeName = Arguments[1];
 			auto AthenaPickaxeId = Cast<UAthenaPickaxeItemDefinition>(UObject::FindObjectSlow(pickaxeName + "." + pickaxeName));
 			auto PickaxeWeaponDef = AthenaPickaxeId ? AthenaPickaxeId->WeaponDefinition : Cast<UFortWeaponMeleeItemDefinition>(UObject::FindObjectSlow(pickaxeName + "." + pickaxeName));
 
@@ -1021,7 +1047,7 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 		} */
 		else if (Command == "listplayers")
 		{
-			auto& ClientConnections = GetWorld()->NetDriver->ClientConnections;
+			auto &ClientConnections = GetWorld()->NetDriver->ClientConnections;
 
 			std::string PlayerNames;
 
@@ -1052,12 +1078,27 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			float X{}, Y{}, Z{};
 
-			try { X = std::stof(Arguments[1]); }
-			catch (...) {}
-			try { Y = std::stof(Arguments[2]); }
-			catch (...) {}
-			try { Z = std::stof(Arguments[3]); }
-			catch (...) {}
+			try
+			{
+				X = std::stof(Arguments[1]);
+			}
+			catch (...)
+			{
+			}
+			try
+			{
+				Y = std::stof(Arguments[2]);
+			}
+			catch (...)
+			{
+			}
+			try
+			{
+				Z = std::stof(Arguments[3]);
+			}
+			catch (...)
+			{
+			}
 
 			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);
 
@@ -1079,12 +1120,27 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			float X{}, Y{}, Z{};
 
-			try { X = std::stof(Arguments[1]); }
-			catch (...) {}
-			try { Y = std::stof(Arguments[2]); }
-			catch (...) {}
-			try { Z = std::stof(Arguments[3]); }
-			catch (...) {}
+			try
+			{
+				X = std::stof(Arguments[1]);
+			}
+			catch (...)
+			{
+			}
+			try
+			{
+				Y = std::stof(Arguments[2]);
+			}
+			catch (...)
+			{
+			}
+			try
+			{
+				Z = std::stof(Arguments[3]);
+			}
+			catch (...)
+			{
+			}
 
 			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);
 
@@ -1109,8 +1165,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			float Health = 100.f;
 
-			try { Health = std::stof(Arguments[1]); }
-			catch (...) {}
+			try
+			{
+				Health = std::stof(Arguments[1]);
+			}
+			catch (...)
+			{
+			}
 
 			Pawn->SetHealth(Health);
 			SendMessageToConsole(PlayerController, L"Set health!\n");
@@ -1129,8 +1190,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			if (NumArgs >= 1)
 			{
-				try { Shield = std::stof(Arguments[1]); }
-				catch (...) {}
+				try
+				{
+					Shield = std::stof(Arguments[1]);
+				}
+				catch (...)
+				{
+				}
 			}
 
 			Pawn->SetShield(Shield);
@@ -1156,8 +1222,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			if (NumArgs >= 1)
 			{
-				try { Speed = std::stof(Arguments[1]); }
-				catch (...) {}
+				try
+				{
+					Speed = std::stof(Arguments[1]);
+				}
+				catch (...)
+				{
+				}
 			}
 
 			auto WorldSettings = GetFortWorldSettings(GetWorld());
@@ -1176,8 +1247,13 @@ void ServerCheatHook(AFortPlayerControllerAthena* PlayerController, FString Msg)
 
 			if (NumArgs >= 1)
 			{
-				try { newMaxPlayers = std::stoi(Arguments[1]); }
-				catch (...) {}
+				try
+				{
+					newMaxPlayers = std::stoi(Arguments[1]);
+				}
+				catch (...)
+				{
+				}
 			}
 
 			GameMode->GameSession->MaxPlayers = newMaxPlayers;
@@ -1211,6 +1287,8 @@ cheat setpickaxe <ShortPickaxeName> - Changes the player's pickaxe to the new pi
 cheat op \PlayerName\ - Gives operator to this player's ip.
 cheat deop \PlayerName\ - Removes operator from this player's ip.
 cheat giveperm - This command lets everyone on the player's island to have permissions (fly, build, etc.).
+cheat pausesafezone - Pauses the safe zone.
+cheat getskin - Gets your current skin (Removed)
 
 If you want to execute a command on a certain player, surround their name (case sensitive) with \, and put the param anywhere. Example: cheat sethealth \Milxnor\ 100
 )";
