@@ -328,6 +328,7 @@ static __int64 (*ApplyCustomizationToCharacter)(AFortPlayerState* a1) = decltype
 
 inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewPlayer, AActor* StartSpot)
 {
+	// std::cout << std::format("SpawnDefaultPawnForHook: 0x{:x}\n", __int64(_ReturnAddress()) - __int64(GetModuleHandleW(0)));
 	auto SpawnTransform = StartSpot->GetTransform();
 	
 
@@ -430,6 +431,7 @@ namespace Globals
 	static bool TimerRun = false;
 	static std::string mode = "Solo";
 	static bool timerHasRun = false;
+	static inline bool bNoMCP = true;
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;
