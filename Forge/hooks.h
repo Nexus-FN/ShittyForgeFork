@@ -2175,7 +2175,7 @@ void ServerLoadingScreenDroppedHook(AFortPlayerControllerAthena* PlayerControlle
 
 	auto Loadout = PlayerController->CosmeticLoadoutPC; // GetLoadout(PlayerController->AthenaProfile, false);
 
-	// std::cout << "Loadout.Backpack: " << Loadout.Backpack << '\n';
+	std::cout << "Loadout.Backpack: " << Loadout.Backpack << '\n';
 
 	if (Loadout.Backpack)
 	{
