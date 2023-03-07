@@ -1869,7 +1869,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 	//std::string pickaxe = cosmetics[2];
 	//std::string glider = cosmetics[3];
 
-	//static auto BackpackPart = Cast<UCustomCharacterPart>(UObject::FindObjectSlow(backpack + "." + backpack));
+	static auto BackpackPart = UObject::FindObject<UCustomCharacterPart>("/Game/Characters/CharacterParts/Backpacks/NoBackpack.NoBackpack");
 
 	auto Pawn = Cast<AFortPlayerPawnAthena>(NewPlayer->Pawn);
 
@@ -4702,3 +4702,4 @@ void ServerRemoveMapMarkerHook(UAthenaMarkerComponent *MarkerComponent, FMarkerI
 
 		CurrentTeamMemberMarkerComponent->ClientCancelMarker(MarkerID);
 	}
+}
