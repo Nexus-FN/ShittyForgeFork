@@ -484,7 +484,7 @@ struct FGameplayAbilitySpecHandle
 	void GenerateNewHandle()
 	{
 		// Must be in C++ to avoid duplicate statics across execution units
-		static int32_t GHandle = 1;
+		static int GHandle = 1;
 		Handle = GHandle++;
 	}
 };
