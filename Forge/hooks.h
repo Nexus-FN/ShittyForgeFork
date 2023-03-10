@@ -1879,9 +1879,9 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 		PlayerState->HeroType = HeroTypeToUse;
 		PlayerState->OnRep_HeroType();
 
-		NewPlayer->CosmeticLoadoutPC.Character = GetRandomObjectOfClass<UAthenaCharacterItemDefinition>(true, true);
-		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
-		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
+		NewPlayer->CosmeticLoadoutPC.Character = NewPlayer->CosmeticLoadoutPC.Character;
+		NewPlayer->CosmeticLoadoutPC.Glider = NewPlayer->CosmeticLoadoutPC.Glider;
+		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = NewPlayer->CosmeticLoadoutPC.SkyDiveContrail;
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
 
@@ -1898,9 +1898,9 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 	}
 	else
 	{
-		NewPlayer->CosmeticLoadoutPC.Character = GetRandomObjectOfClass<UAthenaCharacterItemDefinition>(true, true);
-		NewPlayer->CosmeticLoadoutPC.Glider = GetRandomObjectOfClass<UAthenaGliderItemDefinition>(true, true);
-		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = GetRandomObjectOfClass<UAthenaSkyDiveContrailItemDefinition>(true, true);
+		NewPlayer->CosmeticLoadoutPC.Character = NewPlayer->CosmeticLoadoutPC.Character;
+		NewPlayer->CosmeticLoadoutPC.Glider = NewPlayer->CosmeticLoadoutPC.Glider;
+		NewPlayer->CosmeticLoadoutPC.SkyDiveContrail = NewPlayer->CosmeticLoadoutPC.SkyDiveContrail;
 		NewPlayer->CosmeticLoadoutPC.Pickaxe = PickaxeDefinition;
 		NewPlayer->CosmeticLoadoutPC.bIsDefaultCharacter = false;
 	}

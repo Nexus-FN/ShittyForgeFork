@@ -431,7 +431,7 @@ namespace Globals
 	static bool TimerRun = false;
 	static std::string mode = "Solo";
 	static bool timerHasRun = false;
-	static inline bool bNoMCP = true;
+	static inline bool bNoMCP = false;
 }
 
 static AOnlineBeaconHost* BeaconHost = nullptr;
