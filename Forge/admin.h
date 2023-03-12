@@ -284,7 +284,6 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 			LevelSaveComponent->AccountIdOfOwner = FUniqueNetIdRepl();
 			SendMessageToConsole(PlayerController, L"Done!");
 		}
-#ifdef DEVELOPER_BUILD
 		else if (Command == "spawnbrute")
 		{
 			auto Pawn = Cast<AFortPlayerPawnAthena>(ReceivingController->Pawn);
@@ -358,7 +357,6 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 
 			SendMessageToConsole(PlayerController, L"Spawned bot pawn!");
 		}
-#endif
 		else if (Command == "save")
 		{
 			if (!Globals::bCreative)

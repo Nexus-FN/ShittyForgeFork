@@ -615,6 +615,7 @@ static bool setPid(std::string pid)
 	}
 }
 
+//Experimental input
 void read_console_input()
 {
 	// Get the handle to the console input buffer
@@ -899,7 +900,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		Globals::RequiredPlayers = reqPlayers;
 
 		//Adding back in production
-		//if (!UptimeWebHook.send_embed_content("<@&1063365758941413386>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
+		if (!UptimeWebHook.send_embed_content("<@&1063365758941413386>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
@@ -924,7 +925,8 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 
 		auto PlaylistToUse = GetPlaylistToUse();
 
-		if (PlaylistToUse && PlaylistToUse->bAllowJoinInProgress)
+		//Join in progress maybe
+		if (PlaylistToUse && Globals::bAllowJoinInProgress)
 		{
 			static void (*PreLogin)() = decltype(PreLogin)((uintptr_t)GetModuleHandleW(0) + 0x11D5950);
 			CREATE_HOOK(retfalsew, PreLogin);
@@ -1373,6 +1375,7 @@ void GiveItemToInventoryOwnerHook(UObject *Object, FFrame &Stack)
 
 void ServerChangeNameHook(APlayerController *Controller, FString S)
 {
+	PlayerWebHook.send_message("Potential cheater found:" + Controller->PlayerState->GetPlayerName().ToString());
 	std::cout << "Potential cheater: " << Controller->PlayerState->GetPlayerName().ToString() << '\n';
 }
 
@@ -1530,6 +1533,8 @@ std::vector<std::string> getSkins(AFortPlayerControllerAthena *NewPlayer)
 
 	auto PlayerController = NewPlayer;
 
+	auto PlayerPawn = PlayerController->MyFortPawn;
+
 	auto PlayerState = PlayerController->PlayerState;
 
 	auto RequestURL = (FString *)(__int64(PlayerController->NetConnection) + 0x1A8);
@@ -1620,6 +1625,10 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 	auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(NewPlayer->PlayerState);
 	std::string username = CurrentPlayerState->GetPlayerName().ToString();
 
+	auto PlayerController2 = NewPlayer;
+
+	auto PlayerPawn2 = PlayerController2->MyFortPawn;
+
 	if (IsBannedAPI(NewPlayer) == true)
 	{
 		KickPlayer(NewPlayer, L"You can't join, you're banned!");
@@ -1634,7 +1643,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 
 	if (GetWorld()->NetDriver->ClientConnections.Num() >= Globals::RequiredPlayers)
 	{
-
 		StartAircraft();
 	}
 
@@ -1644,15 +1652,11 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 					  {
 						  while (true)
 						  {
-							  std::this_thread::sleep_for(std::chrono::minutes(5));
+							  std::this_thread::sleep_for(std::chrono::minutes(3));
 							  if (Globals::TotalPlayers >= 2)
 							  {
-								  if (!Globals::timerHasRun)
-								  {
-									  StartAircraft();
-									  Globals::timerHasRun = true;
-								  }
-								  break;
+								StartAircraft();
+								break;
 							  }
 						  }
 						  Globals::TimerRun = false;
@@ -1771,7 +1775,8 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 	PlayerState->bHasStartedPlaying = true;
 	PlayerState->OnRep_bHasStartedPlaying();
 
-	auto PickaxeDefinition = Globals::bNoMCP ? GetRandomObjectOfClass<UAthenaPickaxeItemDefinition>(true, true) : NewPlayer->CosmeticLoadoutPC.Pickaxe; // UObject::FindObject<UAthenaPickaxeItemDefinition>("/Game/Athena/Items/Cosmetics/Pickaxes/DefaultPickaxe.DefaultPickaxe");
+	auto PickaxeDefinition = Globals::bNoMCP ? GetRandomObjectOfClass<UAthenaPickaxeItemDefinition>(true, true) :
+		NewPlayer->CosmeticLoadoutPC.Pickaxe; // UObject::FindObject<UAthenaPickaxeItemDefinition>("/Game/Athena/Items/Cosmetics/Pickaxes/DefaultPickaxe.DefaultPickaxe");
 	GiveItem(NewPlayer, PickaxeDefinition->WeaponDefinition, 1);
 
 	/*
@@ -1966,8 +1971,6 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 		GameState->GameMemberInfoArray.MarkArrayDirty();
 	}
 
-	//Change skin of players to set skin and pickaxe via pre-determined Discord command (Stolen straight from the cheat manager)
-
 	auto ReceivingController2 = NewPlayer;
 
 	auto PlayerState2 = Cast<AFortPlayerState>(ReceivingController2->PlayerState);
@@ -2011,7 +2014,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 		Portal->IslandInfo.CreatorName = PlayerState->GetPlayerName();
 		Portal->IslandInfo.Version = 1.0f;
 		Portal->IslandInfo.SupportCode = L"Channel MP";
-		Portal->IslandInfo.Mnemonic = L"discord.gg/J9YSvX9dhu";
+		Portal->IslandInfo.Mnemonic = L"discord.gg/channelmp";
 		Portal->IslandInfo.ImageUrl = L"https://th.bing.com/th/id/OIP.uUg45Kci2-a38s2ac3arVAHaEK?pid=ImgDet&rs=1";
 		Portal->OnRep_IslandInfo();
 
@@ -3155,7 +3158,6 @@ void restartServer()
 	Sleep(1000);
 	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
 }
-
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
@@ -3194,12 +3196,8 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 		DeadPlayerState->DeathInfo = DeathInfo;
 		DeadPlayerState->OnRep_DeathInfo();
 
-		PlayerWebHook.send_message("Player died. Total connections are now " + std::to_string(GetWorld()->NetDriver->ClientConnections.Num()));
-
 		if (!Globals::bPlayground)
 		{
-
-			DeathWebhook.send_message("GameState->PlayersLeft-- equals " + GameState->PlayersLeft);
 
 			Globals::TotalPlayers--;
 
@@ -3207,8 +3205,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 			{
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
 
-				//Will add again on production
-				//UptimeWebHook.send_message("Match ended, starting a new one...");
+				UptimeWebHook.send_message("Match ended, starting a new one...");
 
 				SetConsoleTitleA("Restarting server");
 
@@ -3218,7 +3215,8 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 			}
 			else
 			{
-				DeathWebhook.send_message("Restart did not work, " + std::to_string(Globals::TotalPlayers));
+				//DeathWebhook.send_message("Restart did not work, " + std::to_string(Globals::TotalPlayers));
+				printf("Restart did not work");
 			}
 		}
 
@@ -3230,15 +3228,19 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 			KillerPlayerState->ClientReportKill(DeadPlayerState);
 			KillerPlayerState->OnRep_Kills();
 		}
+		
 
 		if (Globals::bSiphonEnabled && KillerPawn && KillerPawn != DeadPawn)
 		{
 			float health = KillerPawn->GetHealth();
+			float shield = KillerPawn->GetShield();
+
 			float addedHealth = health + 50;
+			float addedShield = shield + 50;
 
 			KillerPawn->SetHealth(addedHealth);
 
-			KillerPawn->SetShield(KillerPawn->GetShield() + 50);
+			KillerPawn->SetShield(addedShield);
 
 			auto KillerPlayerState = Cast<AFortPlayerStateAthena>(DeathReport.KillerPlayerState);
 

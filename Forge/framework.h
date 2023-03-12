@@ -326,18 +326,78 @@ static FVector GetActorLocation(AActor* Actor)
 
 static __int64 (*ApplyCustomizationToCharacter)(AFortPlayerState* a1) = decltype(ApplyCustomizationToCharacter)(__int64(GetModuleHandleW(0)) + 0x1A1FE80);
 
+
+namespace Globals
+{
+	static inline bool bSiphonEnabled = true;
+	static inline bool bLogProcessEvent = false;
+	static inline bool bCreative = false; // Playlist->bEnableCreativeMode
+	static inline bool bAllowJoinInProgress = true;
+	static inline bool bLateGame = true;
+	// static inline bool bMinimumPlayersToDropLS = 1;
+	static inline bool bPlayground = false;
+	static inline bool bRestarting = false;
+	static int AmountOfRestarts = 0;
+	static int TotalPlayers = 0;
+	static int RequiredPlayers = 10;
+	static std::string pid = "0";
+	static bool TimerRun = false;
+	static std::string mode = "Solo";
+	static bool timerHasRun = false;
+	static inline bool bNoMCP = false;
+}
+
 inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewPlayer, AActor* StartSpot)
 {
 	// std::cout << std::format("SpawnDefaultPawnForHook: 0x{:x}\n", __int64(_ReturnAddress()) - __int64(GetModuleHandleW(0)));
-	auto SpawnTransform = StartSpot->GetTransform();
-	
 
+	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
+
+	auto gamephase = GameState->GamePhase;
+
+	bool isWarmup = false;
+
+	if (gamephase == EAthenaGamePhase::Warmup)
+	{
+		ServerWebhook.send_message("Is warmup");
+		isWarmup = true;
+	}
+
+	auto SpawnTransform = StartSpot->GetTransform();
+
+	SDK::FTransform MyTransform;
+	MyTransform.Translation = SDK::FVector(1000, 1000, 20000);
 
 	auto Controller = Cast<AFortPlayerControllerAthena>(NewPlayer);
 
 	bool bIsRespawning = false;
 
 	auto PlayerState = Cast<AFortPlayerStateAthena>(Controller->PlayerState);
+
+	//Spawn newpawn at MyTransform if isWarmup is true, if not, 
+	auto newpawn = GameMode->SpawnDefaultPawnAtTransform(NewPlayer, isWarmup ? SpawnTransform : MyTransform);
+
+	auto PawnAsAthena = Cast<AFortPlayerPawnAthena>(newpawn);
+
+	//maybe join in progress
+	if (Globals::bAllowJoinInProgress && gamephase != EAthenaGamePhase::Warmup)
+	{
+		SpawnTransform.Translation = FVector(1000, 1000, 20000);
+
+		PawnAsAthena->CosmeticLoadout = Controller->CosmeticLoadoutPC;
+		PawnAsAthena->OnRep_CosmeticLoadout();
+
+		ApplyCID(PlayerState, Controller->CosmeticLoadoutPC.Character);
+
+		//auto playername = PlayerState->GetPlayerName();
+
+		ServerWebhook.send_message("Tried join in progess for player");
+
+	}
+	else {
+		SpawnTransform.Translation = FVector(1000, 1000, 20000);
+		ServerWebhook.send_message("Gamephase is warumup or allowjoininprogress is false");
+	}
 	
 	if (Controller)
 	{
@@ -355,11 +415,6 @@ inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewP
 		}
 	}
 
-	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
-
-	auto gamephase = GameState->GamePhase;
-
-	auto newpawn = GameMode->SpawnDefaultPawnAtTransform(NewPlayer, SpawnTransform);
 	std::cout << "newpawn: " << newpawn << '\n';
 	std::cout << "bIsRespawning: " << bIsRespawning << '\n';
 
@@ -414,26 +469,6 @@ inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewP
 	return newpawn;
 }
 
-namespace Globals
-{
-	static inline bool bSiphonEnabled = true;
-	static inline bool bLogProcessEvent = false;
-	static inline bool bCreative = false; // Playlist->bEnableCreativeMode
-	static inline bool bAllowJoinInProgress = false;
-	static inline bool bLateGame = true;
-	// static inline bool bMinimumPlayersToDropLS = 1;
-	static inline bool bPlayground = false;
-	static inline bool bRestarting = false;
-	static int AmountOfRestarts = 0;
-	static int TotalPlayers = 0;
-	static int RequiredPlayers = 10;
-	static std::string pid = "0";
-	static bool TimerRun = false;
-	static std::string mode = "Solo";
-	static bool timerHasRun = false;
-	static inline bool bNoMCP = false;
-}
-
 static AOnlineBeaconHost* BeaconHost = nullptr;
 
 static ENetMode GetNetModeHook() { /* std::cout << "AA!\n"; */ return ENetMode::NM_DedicatedServer; }
@@ -453,6 +488,8 @@ inline void RestartServer()
 		return;
 
 	Globals::bRestarting = true;
+
+
 	
 	// REMOVE_HOOK(GetNetModeHook, GetNetMode);
 	// REMOVE_HOOK(IsNoMCPHook, IsNoMCP);
@@ -526,6 +563,7 @@ static UFortPlaylistAthena* GetPlaylistToUse()
 			Globals::bLateGame = true;
 			Globals::bPlayground = false;
 			Globals::bCreative = false;
+			Globals::bSiphonEnabled = true;
 		}
 		else if (line == "Solo")
 		{
@@ -698,7 +736,7 @@ static void StartAircraft()
 
 
 	//Adding back in production
-	//UptimeWebHook.send_message("Match started! Wait for a new one to start.");
+	UptimeWebHook.send_message("Match started! Wait for a new one to start.");
 }
 
 static void StartAircraftDelayed()
