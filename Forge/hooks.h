@@ -2037,9 +2037,9 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 		NewPlayer->CreativePlotLinkedVolume->VolumeState = EVolumeState::Ready;
 		NewPlayer->CreativePlotLinkedVolume->OnRep_VolumeState();
 
-		static UFortCreativeRealEstatePlotItemDefinition *RealEstatePID =
+		// static UFortCreativeRealEstatePlotItemDefinition *RealEstatePID =
 			// UObject::FindObject<UFortCreativeRealEstatePlotItemDefinition>("/Game/Playgrounds/Items/Plots/BlackGlass_Medium.BlackGlass_Medium");
-			UObject::FindObject<UFortCreativeRealEstatePlotItemDefinition>("/Game/Playgrounds/Items/Plots/Temperate_Medium.Temperate_Medium");
+			// UObject::FindObject<UFortCreativeRealEstatePlotItemDefinition>("/Game/Playgrounds/Items/Plots/Temperate_Medium.Temperate_Medium");
 
 		auto VolumeManager = GameState->VolumeManager;
 		auto &VolumeObjects = VolumeManager->VolumeObjects;
@@ -3209,9 +3209,9 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 				SetConsoleTitleA("Restarting server");
 
-				DeathWebhook.send_message("Restarting server in 1 second");
-				std::thread t1(restartServer);
-				DeathWebhook.send_message("Restarting hopefully worked");
+				//DeathWebhook.send_message("Restarting server in 1 second");
+				//std::thread t1(restartServer);
+				//DeathWebhook.send_message("Restarting hopefully worked");
 			}
 			else
 			{

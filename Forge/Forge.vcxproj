@@ -70,9 +70,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)libs;$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -175,10 +172,10 @@
     <ClCompile Include="util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Desktop\httplib.h" />
     <ClInclude Include="admin.h" />
     <ClInclude Include="ai.h" />
     <ClInclude Include="ContainerAllocationPolicies.h" />
+    <ClInclude Include="creative.h" />
     <ClInclude Include="discord.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="StringConv.h" />
