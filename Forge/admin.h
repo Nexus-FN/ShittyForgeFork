@@ -221,7 +221,7 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 			ReceivingController->CheatManager->Teleport();
 			ReceivingController->CheatManager = nullptr;
 		}
-		/* else if (Command == "bugitgoall")
+		else if (Command == "bugitgoall")
 		{
 			if (Arguments.size() <= 3)
 			{
@@ -253,8 +253,20 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 				auto CurrentPawn = Cast<AFortPlayerPawnAthena>(CurrentPlayerController->Pawn);
 
 				CurrentPawn->K2_TeleportTo(FVector(X, Y, Z), CurrentPawn->K2_GetActorRotation());
+
+
 			}
-		} */
+		}
+		else if (Command == "accountid")
+		{
+
+			auto CurrentPlayerController = PlayerController;
+
+			auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(CurrentPlayerController->PlayerState);
+
+			auto accountid = CurrentPlayerState->UniqueId;
+
+		}
 		else if (Command == "startaircraft")
 		{
 			StartAircraft();

@@ -6,6 +6,8 @@
 
 #include "json.hpp"
 
+#include <future>
+
 bool IsBanned(APlayerController* PlayerController)
 {
 	std::ifstream input_file(("banned-ips.json"));
@@ -88,47 +90,47 @@ static std::string getRequestString(std::string url)
 
 }
 
-bool IsBannedAPI(APlayerController* PlayerController)
+std::future<bool> IsBannedAPIAsync(APlayerController* PlayerController)
 {
+	return std::async([PlayerController]() {
+		auto Controller = PlayerController;
 
-	auto Controller = PlayerController;
+		auto PlayerState = PlayerController->PlayerState;
 
-	auto PlayerState = PlayerController->PlayerState;
+		auto RequestURL = (FString*)(__int64(Controller->NetConnection) + 0x1A8);
+		auto RequestURLStr = RequestURL->ToString();
 
-	auto RequestURL = (FString*)(__int64(Controller->NetConnection) + 0x1A8);
-	auto RequestURLStr = RequestURL->ToString();
+		std::size_t pos = RequestURLStr.find("Name=");
+		std::string Name = RequestURLStr.substr(pos + 5);
 
-	std::size_t pos = RequestURLStr.find("Name=");
-	std::string Name = RequestURLStr.substr(pos + 5);
+		auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
 
-	auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
+		std::string username = PlayerName.c_str();
+		std::string replacement = "%20";
 
-	std::string username = PlayerName.c_str();
-	std::string replacement = "%20";
+		std::string replacedUsername = username;
 
-	std::string replacedUsername = username;
-
-	// Iterate through each character in the string
-	for (int i = 0; i < replacedUsername.length(); i++) {
-		// If the current character is a space, replace it with the replacement string
-		if (replacedUsername[i] == ' ') {
-			replacedUsername.replace(i, 1, replacement);
-			i += replacement.length() - 1;
+		// Iterate through each character in the string
+		for (int i = 0; i < replacedUsername.length(); i++) {
+			// If the current character is a space, replace it with the replacement string
+			if (replacedUsername[i] == ' ') {
+				replacedUsername.replace(i, 1, replacement);
+				i += replacement.length() - 1;
+			}
 		}
-	}
 
-	std::string url = "http://backend.channelmp.com:3551/players/banned/" + replacedUsername;
+		std::string url = "http://backend.channelmp.com:3551/players/banned/" + replacedUsername;
 
-	std::string response = getRequestString(url);
+		std::string response = getRequestString(url);
 
-	if (response == "1")
-	{
-		return true;
-	}
-	else {
-		return false;
-	}
-
+		if (response == "1")
+		{
+			return true;
+		}
+		else {
+			return false;
+		}
+		});
 }
 
 

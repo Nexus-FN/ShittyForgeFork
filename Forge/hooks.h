@@ -561,20 +561,19 @@ void SetPlaylist(UFortPlaylistAthena *Playlist, bool bLoadPlaylistLevels = false
 
 static bool retfalsew() { return false; }
 
-static bool setPid(std::string pid)
+static std::future<bool> setPidAsync(std::string pid)
 {
-
 	std::string url = "http://backend.channelmp.com:3551/server/setpid?pid=" + pid + "&token=SecretChannelMPToken1608&name=alpha";
 
 	// Initialize libcurl
 	curl_global_init(CURL_GLOBAL_ALL);
-	CURL *curl = curl_easy_init();
+	CURL* curl = curl_easy_init();
 	if (!curl)
 	{
 		fprintf(stderr, "Failed to initialize libcurl.\n");
 		curl_global_cleanup();
 		PlayerWebHook.send_message("Failed to initialize libcurl for PID.");
-		return false;
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
 	}
 
 	// Set URL to API endpoint
@@ -589,7 +588,7 @@ static bool setPid(std::string pid)
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
 		PlayerWebHook.send_message("PID Failed to perform HTTP request " + res);
-		return false;
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
 	}
 
 	// Check HTTP response code
@@ -602,7 +601,7 @@ static bool setPid(std::string pid)
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_body);
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
-		return response_body;
+		return std::async(std::launch::deferred, [response_body]() { return response_body; }); // Return a future with a deferred function to return response_body
 	}
 	else
 	{
@@ -611,7 +610,7 @@ static bool setPid(std::string pid)
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
 		PlayerWebHook.send_message("PID HTTP request failed with status code " + response_code);
-		return "false";
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
 	}
 }
 
@@ -905,17 +904,18 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 			// Sleep(-1); // what why did i have this here i honestly forgot
 		}
 
-		//For development
-		if (!ServerWebhook.send_message("Server is up for development"))
-		{
-		}
+		////For development
+		//if (!ServerWebhook.send_message("Server is up for development"))
+		//{
+		//}
 
 		//Added automatic server database entries and PID updating
 		std::string pid = std::to_string(GetCurrentProcessId());
 
-		if (setPid(pid))
+		auto setPidFuture = setPidAsync(pid);
+		bool setPidResult = setPidFuture.get();
+		if (setPidResult)
 		{
-			Globals::pid = pid;
 			ServerWebhook.send_embed("Updated server", "New data: **Online** and pid " + pid, 16776960);
 		}
 		else
@@ -1528,96 +1528,6 @@ __int64 DispatchRequestHook(__int64 a1, __int64 *a2, int a3)
 	return DispatchRequestOriginal(a1, a2, a3);
 }
 
-std::vector<std::string> getSkins(AFortPlayerControllerAthena *NewPlayer)
-{
-
-	auto PlayerController = NewPlayer;
-
-	auto PlayerPawn = PlayerController->MyFortPawn;
-
-	auto PlayerState = PlayerController->PlayerState;
-
-	auto RequestURL = (FString *)(__int64(PlayerController->NetConnection) + 0x1A8);
-	auto RequestURLStr = RequestURL->ToString();
-
-	std::size_t pos = RequestURLStr.find("Name=");
-	std::string Name = RequestURLStr.substr(pos + 5);
-
-	auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
-
-	std::string username = PlayerName.c_str();
-	std::string replacement = "%20";
-
-	std::string replacedUsername = username;
-
-	// Iterate through each character in the string
-	for (int i = 0; i < replacedUsername.length(); i++)
-	{
-		// If the current character is a space, replace it with the replacement string
-		if (replacedUsername[i] == ' ')
-		{
-			replacedUsername.replace(i, 1, replacement);
-			i += replacement.length() - 1;
-		}
-	}
-
-	std::vector<std::string> fakearray = {"CID_001_Athena_Commando_F_Tactical", "BID_004_BlackKnight", "HalloweenScythe", "Umbrella_PaperParasol"};
-
-	// Construct URL to API endpoint
-	std::string url = "http://backend.channelmp.com:3551/players/cosmetics/" + replacedUsername;
-
-	// Initialize libcurl
-	curl_global_init(CURL_GLOBAL_ALL);
-	CURL *curl = curl_easy_init();
-	if (!curl)
-	{
-		fprintf(stderr, "Failed to initialize libcurl.\n");
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to get cosmetics because !curl, returned fake cosmetics");
-		return fakearray;
-	}
-
-	// Set URL to API endpoint
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-	// Set callback function for response body
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-	// Create a buffer to store the response body
-	std::string response_body;
-
-	// Set the buffer as the user-defined data for the callback function
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
-
-	// Perform HTTP request
-	CURLcode res = curl_easy_perform(curl);
-
-	if (res != CURLE_OK)
-	{
-		fprintf(stderr, "Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-		PlayerWebHook.send_message("Failed to get cosmetics because res!= CURLE_OK, returned fake cosmetics");
-		return fakearray;
-	}
-
-	// Check HTTP response code
-	long response_code;
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-	// HTTP request successful, parse response body
-	curl_easy_cleanup(curl);
-	curl_global_cleanup();
-	json response_json = json::parse(response_body);
-
-	std::string skin = response_json["skin"].get<std::string>();
-	std::string backpack = response_json["backpack"].get<std::string>();
-	std::string pickaxe = response_json["pickaxe"].get<std::string>();
-	std::string glider = response_json["glider"].get<std::string>();
-
-	std::vector<std::string> array = {skin, backpack, pickaxe, glider};
-	return array;
-}
-
 void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerControllerAthena *NewPlayer)
 {
 	auto GameState = Cast<AFortGameStateAthena>(GameMode->GameState);
@@ -1629,7 +1539,10 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 
 	auto PlayerPawn2 = PlayerController2->MyFortPawn;
 
-	if (IsBannedAPI(NewPlayer) == true)
+	std::future<bool> isBannedFuture = IsBannedAPIAsync(NewPlayer);
+	bool isBanned = isBannedFuture.get();
+
+	if (isBanned)
 	{
 		KickPlayer(NewPlayer, L"You can't join, you're banned!");
 		PlayerWebHook.send_message("**" + username + "**" + " joined, they are banned! pid: " + Globals::pid);
@@ -3155,7 +3068,6 @@ void OnBuildingActorInitializedHook(ABuildingActor *BuildingActor, TEnumAsByte<E
 
 void restartServer()
 {
-	Sleep(1000);
 	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
 }
 //Comment so I can find this later
@@ -3209,9 +3121,11 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 				SetConsoleTitleA("Restarting server");
 
+				printf("matchended");
+
 				//DeathWebhook.send_message("Restarting server in 1 second");
-				//std::thread t1(restartServer);
-				//DeathWebhook.send_message("Restarting hopefully worked");
+				std::thread t1(restartServer);
+				DeathWebhook.send_message("Restarting hopefully worked");
 			}
 			else
 			{
