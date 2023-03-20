@@ -3124,6 +3124,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 	auto KillerPlayerState = Cast<AFortPlayerStateAthena>(DeathReport.KillerPlayerState);
 	auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
 	auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GameState);
+	auto KillerPlayerController = Cast<AFortPlayerControllerAthena>(DeathReport.KillerPlayerController);
 
 	if (!DeadPawn)
 		return;
@@ -3156,19 +3157,17 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 		{
 
 			Globals::TotalPlayers--;
-			
-			std::future<bool> isStatsIncreased = UpdateStats(NewPlayer);
- 			bool isIncreased = isStatsIncreased.get();
-
- 			if (isIncreased)
-			{
-				printf("Increased stats");
-			}
-			
-			
 
 			if (Globals::TotalPlayers == 0)
 			{
+				std::future<bool> isStatsIncreased = UpdateStats(KillerPlayerController);
+ 				bool isIncreased = isStatsIncreased.get();
+
+ 				if (isIncreased)
+				{
+				printf("Increased stats");
+				}
+				
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
 
 				UptimeWebHook.send_message("Match ended, starting a new one...");
