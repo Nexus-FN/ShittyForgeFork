@@ -305,6 +305,9 @@ DWORD WINAPI Main(LPVOID)
     HookFunction(DefaultFortPCAthena, ServerLoadingScreenDroppedFn, ServerLoadingScreenDroppedHook, (PVOID*)&ServerLoadingScreenDropped, false, ServerServerLoadingScreenDroppedIndex);
     // ^^ 48 FF A0 F0 12 00 00
 
+    static auto OnMatchEndedFn = UObject::FindObject<UFunction>("/Script/FortniteGame.OnlineSubsystem.TurnBasedMatchInterface");
+    HookFunction(DefaultFortGameModeAthena, OnMatchEndedFn, OnMatchEndedHook);
+
     static auto EmoteEndAbility = UObject::FindObject<UFunction>("/Game/Abilities/Emotes/GAB_Emote_Generic.GAB_Emote_Generic_C.K2_OnEndAbility");
     AddHook(EmoteEndAbility, K2_OnEndAbilityEmoteHook);
 
