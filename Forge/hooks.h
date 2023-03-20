@@ -3070,6 +3070,50 @@ void restartServer()
 {
 	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
 }
+
+std::future<bool> UpdateStats(APlayerController* PlayerController)
+{
+	return std::async([PlayerController]() {
+		auto Controller = PlayerController;
+
+		auto PlayerState = PlayerController->PlayerState;
+
+		auto RequestURL = (FString*)(__int64(Controller->NetConnection) + 0x1A8);
+		auto RequestURLStr = RequestURL->ToString();
+
+		std::size_t pos = RequestURLStr.find("Name=");
+		std::string Name = RequestURLStr.substr(pos + 5);
+
+		auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
+
+		std::string username = PlayerName.c_str();
+		std::string replacement = "%20";
+
+		std::string replacedUsername = username;
+
+		// Iterate through each character in the string
+		for (int i = 0; i < replacedUsername.length(); i++) {
+			// If the current character is a space, replace it with the replacement string
+			if (replacedUsername[i] == ' ') {
+				replacedUsername.replace(i, 1, replacement);
+				i += replacement.length() - 1;
+			}
+		}
+
+		std::string url = "http://backend.channelmp.com:3551/stats/wins/" + replacedUsername;
+
+		std::string response = getRequestString(url);
+
+		if (response == "OK")
+		{
+			return true;
+		}
+		else {
+			return false;
+		}
+		});
+}
+
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
@@ -3112,6 +3156,16 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 		{
 
 			Globals::TotalPlayers--;
+			
+			std::future<bool> isStatsIncreased = UpdateStats(NewPlayer);
+ 			bool isIncreased = isStatsIncreased.get();
+
+ 			if (isIncreased)
+			{
+				printf("Increased stats");
+			}
+			
+			
 
 			if (Globals::TotalPlayers == 0)
 			{
