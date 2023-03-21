@@ -309,7 +309,7 @@ DWORD WINAPI Main(LPVOID)
     HookFunction(DefaultFortGameModeAthena, OnMatchEndedFn, OnMatchEndedHook);
 
     static auto OnWinnerAnnounced = UObject::FindObject<UFunction>("/Script/FortniteGame.FortGameStateAthena.OnWinnerAnnounced");
-    HookFunction(AFortGameStateAthena, OnWinnerAnnounced, OnWinnerAnnouncedHook);
+    HookFunction(DefaultFortGameModeAthena, OnWinnerAnnounced, OnWinnerAnnouncedHook);
 
     static auto EmoteEndAbility = UObject::FindObject<UFunction>("/Game/Abilities/Emotes/GAB_Emote_Generic.GAB_Emote_Generic_C.K2_OnEndAbility");
     AddHook(EmoteEndAbility, K2_OnEndAbilityEmoteHook);
