@@ -3134,7 +3134,6 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 	auto KillerPlayerState = Cast<AFortPlayerStateAthena>(DeathReport.KillerPlayerState);
 	auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
 	auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GameState);
-	auto KillerController = Cast<AFortPlayerControllerAthena>(DeathReport.KillerController);
 
 	if (!DeadPawn)
 		return;
@@ -3170,7 +3169,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 			if (Globals::TotalPlayers == 0)
 			{
-				std::future<bool> isStatsIncreased = UpdateStats(KillerController);
+				std::future<bool> isStatsIncreased = UpdateStats(DeadPlayerController);
  				bool isIncreased = isStatsIncreased.get();
 
  				if (isIncreased)
