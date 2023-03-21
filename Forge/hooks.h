@@ -904,6 +904,7 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
+			std::cout << "Couldn't send the server uptime webhook!" << std::endl;
 		}
 
 		////For development
