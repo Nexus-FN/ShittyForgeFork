@@ -2059,7 +2059,17 @@ void ServerChoosePartHook(AFortPlayerPawn *Pawn, TEnumAsByte<EFortCustomPartType
 void OnMatchEndedHook (AFortGameStateAthena *GameState, AFortPlayerStateAthena *Winner, AFortPlayerStateAthena *Loser, bool bIsDraw)
 {
 	std::cout << "match ended!\n";
-	ServerWebhook.send_message("match ended!");
+	//ServerWebhook.send_message("match ended!");
+
+	// auto PlayerController = GameState->GetWorld()->GetFirstPlayerController();
+
+	// auto Playe
+}
+
+void OnWinnerAnnouncedHook()
+{
+	std::cout << "winner announced!\n";
+	ServerWebhook.send_message("winner announced!");
 
 	// auto PlayerController = GameState->GetWorld()->GetFirstPlayerController();
 
