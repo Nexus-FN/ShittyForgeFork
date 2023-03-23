@@ -1609,7 +1609,7 @@ void HandleStartingNewPlayerHook(AFortGameModeAthena *GameMode, AFortPlayerContr
 						  while (true)
 						  {
 							  std::this_thread::sleep_for(std::chrono::minutes(3));
-							  if (Globals::TotalPlayers >= Globals::bPlayground ? 1 : 2)
+							  if (Globals::TotalPlayers >= 2)
 							  {
 								StartAircraft();
 								break;
