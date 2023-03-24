@@ -2062,6 +2062,8 @@ void ServerLoadingScreenDroppedHook(AFortPlayerControllerAthena *PlayerControlle
 {
 	// std::cout << "lsdropped!\n";
 
+	//uALobbyBeaconState->WaitForPlayersTimeRemaining = 100.0f;
+
 	// static FFortAthenaLoadout (*GetLoadout)(UFortMcpProfileAthena* AthenaProfile, char a2) = decltype(GetLoadout)(__int64(GetModuleHandleW(0)) + 0x1F15AB0);
 
 	auto Loadout = PlayerController->CosmeticLoadoutPC; // GetLoadout(PlayerController->AthenaProfile, false);
@@ -2112,7 +2114,7 @@ void ServerSetInAircraftHook(AFortPlayerStateAthena *PlayerState, bool bNewInAir
 {
 	auto PlayerController = Cast<AFortPlayerControllerAthena>(PlayerState->GetOwner());
 
-	std::cout << "HUH!\n";
+	std::cout << "ServerSetInAircraftHook!\n";
 
 	if (!PlayerController)
 		return;
