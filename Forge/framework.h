@@ -380,8 +380,9 @@ inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewP
 	auto PawnAsAthena = Cast<AFortPlayerPawnAthena>(newpawn);
 
 	//maybe join in progress
-	if (Globals::bAllowJoinInProgress && gamephase != EAthenaGamePhase::Warmup)
+	if (Globals::bAllowJoinInProgress && gamephase != EAthenaGamePhase::Warmup && Globals::bPlayground)
 	{
+
 		SpawnTransform.Translation = FVector(1000, 1000, 20000);
 
 		PawnAsAthena->CosmeticLoadout = Controller->CosmeticLoadoutPC;
