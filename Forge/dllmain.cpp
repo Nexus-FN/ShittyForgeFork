@@ -162,6 +162,10 @@ DWORD WINAPI Main(LPVOID)
         CREATE_HOOK(DispatchRequestHook, DispatchRequestOriginal);
     }
 
+    // CREATE_HOOK(sub_7FF68F4E72C0Detour, sub_7FF68F4E72C0Og);
+     // CREATE_HOOK(asdaqdDetour, asdaqdOg);
+     // CREATE_HOOK(wtfafaeifgjkwDetour, wtfafaeifgjkwOg);
+
     __int64 (*sub_7FF68F3C56B0)(__int64* a1, __int64 a2, char a3) = decltype(sub_7FF68F3C56B0)(__int64(GetModuleHandleW(0)) + 0x10C56B0);
     // CREATE_HOOK(crashaf, sub_7FF68F3C56B0);
 
@@ -208,8 +212,6 @@ DWORD WINAPI Main(LPVOID)
     static auto ServerGiveCreativeItemFn = UObject::FindObject<UFunction>("/Script/FortniteGame.FortPlayerControllerAthena.ServerGiveCreativeItem");
     HookFunction2(DefaultFortPCAthena, ServerGiveCreativeItemFn, ServerGiveCreativeItemHook);
     // AddHook(ServerGiveCreativeItemFn, ServerGiveCreativeItemHook);
-
-    // std::cout << "You bozo: " << 
 
     static auto TeleportPlayerToLinkedVolumeFn = UObject::FindObject<UFunction>("/Script/FortniteGame.FortAthenaCreativePortal.TeleportPlayerToLinkedVolume");
     // AddHook(TeleportPlayerToLinkedVolumeFn, TeleportPlayerToLinkedVolumeHook); // CANNOT NATIVE HOOK, NULLSUB
@@ -304,12 +306,6 @@ DWORD WINAPI Main(LPVOID)
     static auto ServerLoadingScreenDroppedFn = UObject::FindObject<UFunction>("/Script/FortniteGame.FortPlayerController.ServerLoadingScreenDropped");
     HookFunction(DefaultFortPCAthena, ServerLoadingScreenDroppedFn, ServerLoadingScreenDroppedHook, (PVOID*)&ServerLoadingScreenDropped, false, ServerServerLoadingScreenDroppedIndex);
     // ^^ 48 FF A0 F0 12 00 00
-
-    //static auto OnMatchEndedFn = UObject::FindObject<UFunction>("/Script/OnlineSubsystem.TurnBasedMatchInterface.OnMatchEnded");
-    //HookFunction(DefaultFortGameModeAthena, OnMatchEndedFn, OnMatchEndedHook);
-
-    //static auto OnWinnerAnnounced = UObject::FindObject<UFunction>("/Script/FortniteGame.FortGameStateAthena.OnWinnerAnnounced");
-    //HookFunction(DefaultFortGameModeAthena, OnWinnerAnnounced, OnWinnerAnnouncedHook);
 
     static auto EmoteEndAbility = UObject::FindObject<UFunction>("/Game/Abilities/Emotes/GAB_Emote_Generic.GAB_Emote_Generic_C.K2_OnEndAbility");
     AddHook(EmoteEndAbility, K2_OnEndAbilityEmoteHook);
