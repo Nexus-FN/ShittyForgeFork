@@ -801,6 +801,8 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 			}
 		}
 
+		std::cout << std::format("Gamemode: 0x{:x}\n", __int64(GameMode));
+
 		AllVehicleSpawners.Free();
 
 		auto Globals = GetFortGlobals();
@@ -899,9 +901,10 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		Globals::RequiredPlayers = reqPlayers;
 
 		//Adding back in production
-		if (!UptimeWebHook.send_embed_content("<@&1063365758941413386>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
+		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
 		{
 			// Sleep(-1); // what why did i have this here i honestly forgot
+			std::cout << "Couldn't send the server uptime webhook!" << std::endl;
 		}
 
 		////For development
@@ -1043,6 +1046,37 @@ static void GenericArray_GetHook(void *TargetArray, const FArrayProperty *ArrayP
 	return GenericArray_Get(TargetArray, ArrayProp, Index, Item);
 }
 
+__int64 (*asdaqdOg)(__int64 a1, float a2) = decltype(asdaqdOg)(__int64(GetModuleHandleW(0)) + 0x11ED3F0);
+
+ __int64 asdaqdDetour(__int64 a1, float a2)
+ {
+ 	std::cout << "zone222 a2: " << a2 << '\n';
+ 	std::cout << std::format("zone222 funny: 0x{:x}\n", __int64(_ReturnAddress()) - __int64(GetModuleHandleW(0)));
+ 	return asdaqdOg(a1, a2);
+ }
+
+ __int64 (*wtfafaeifgjkwOg)(UObject* a1) = decltype(wtfafaeifgjkwOg)(__int64(GetModuleHandleW(0)) + 0x2E4C200);
+
+ __int64 wtfafaeifgjkwDetour(UObject* a1)
+ {
+ 	if (a1->IsA(AFortGameMode::StaticClass()))
+ 	{
+ 		// std::cout << std::format("zone333 funny: 0x{:x}\n", __int64(_ReturnAddress()) - __int64(GetModuleHandleW(0)));
+ 	}
+
+ 	return wtfafaeifgjkwOg(a1);
+ }
+
+ void (*sub_7FF68F4E72C0Og)(__int64 a1, int a2) = decltype(sub_7FF68F4E72C0Og)(__int64(GetModuleHandleW(0)) + 0x11E72C0);
+
+ void sub_7FF68F4E72C0Detour(__int64 a1, int a2)
+ {
+ 	std::cout << "a2: " << a2 << '\n';
+ 	std::cout << std::format("zone funny: 0x{:x}\n", __int64(_ReturnAddress()) - __int64(GetModuleHandleW(0)));
+ 	return sub_7FF68F4E72C0Og(a1, a2);
+ }
+
+
 bool CommitExecuteWeaponHook(UObject *Object, UFunction *, void *Parameters)
 {
 	auto Ability = (UFortGameplayAbility *)Object;
@@ -1075,11 +1109,11 @@ static void KickPlayerHook(AGameSession *GameSession, AFortPlayerControllerAthen
 	// std::cout << "KickPlayer!\n";
 }
 
-static bool OnSafeZoneStateChangeHook(UObject *Object, UFunction *, void *Parameters)
+static bool OnSafeZoneStateChangeHook(UObject* Object, UFunction*, void* Parameters)
 {
-	auto SafeZoneIndicator = (AFortSafeZoneIndicator *)Object;
+	auto SafeZoneIndicator = (AFortSafeZoneIndicator*)Object;
 
-	auto Params = (AFortSafeZoneIndicator_OnSafeZoneStateChange_Params *)Parameters;
+	auto Params = (AFortSafeZoneIndicator_OnSafeZoneStateChange_Params*)Parameters;
 
 	std::cout << "Params->NewState: " << (int)Params->NewState << '\n';
 	std::cout << "Params->bInitial: " << (int)Params->bInitial << '\n';
@@ -1093,7 +1127,7 @@ static bool OnSafeZoneStateChangeHook(UObject *Object, UFunction *, void *Parame
 		std::cout << "Aircraft: " << Aircraft << '\n';
 
 		static FVector AircraftLocation = Aircraft->K2_GetActorLocation();
-		static FVector_NetQuantize100 AircraftLocationQuantize = FVector_NetQuantize100{AircraftLocation.X, AircraftLocation.Y, AircraftLocation.Z};
+		static FVector_NetQuantize100 AircraftLocationQuantize = FVector_NetQuantize100{ AircraftLocation.X, AircraftLocation.Y, AircraftLocation.Z };
 
 		std::cout << "GameMode->SafeZonePhase: " << GameMode->SafeZonePhase << '\n';
 
@@ -1122,46 +1156,55 @@ static bool OnSafeZoneStateChangeHook(UObject *Object, UFunction *, void *Parame
 			SafeZoneIndicator->NextRadius = 20000;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
-		if (GameMode->SafeZonePhase == 4)
+		if (GameMode->SafeZonePhase == 4) // Start
 		{
-			std::random_device rd;	// obtain a random number from hardware
-			std::mt19937 gen(rd()); // seed the generator
-			std::uniform_int_distribution<> distr(100.f, 1000.f);
+			// AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(0, 1000), GetRandomFloat(0, 1000), 0 };
 
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 9500;
-			SafeZoneIndicator->NextCenter = AircraftLocationQuantize; // FVector_NetQuantize100{ AircraftLocationQuantize + FVector_NetQuantize100{ (float)distr(gen), (float)distr(gen), 0 } };
+			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
 		if (GameMode->SafeZonePhase == 5)
 		{
+			AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(5000, 10000), GetRandomFloat(5000, 10000), 0 };
+
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 4000;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
 		if (GameMode->SafeZonePhase == 6)
 		{
+			AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(5000, 10000), GetRandomFloat(5000, 10000), 0 };
+
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 1000;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
 		if (GameMode->SafeZonePhase == 7)
 		{
+			AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(5000, 10000), GetRandomFloat(5000, 10000), 0 };
+
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 0;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
 		if (GameMode->SafeZonePhase == 8)
 		{
+			AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(5000, 10000), GetRandomFloat(5000, 10000), 0 };
+
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 0;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
 		if (GameMode->SafeZonePhase == 9)
 		{
+			AircraftLocationQuantize += FVector_NetQuantize100{ GetRandomFloat(5000, 10000), GetRandomFloat(5000, 10000), 0 };
+
 			UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
 			SafeZoneIndicator->NextRadius = 0;
 			SafeZoneIndicator->NextCenter = AircraftLocationQuantize;
 		}
+
 	}
 
 	return false;
@@ -2062,6 +2105,8 @@ void ServerLoadingScreenDroppedHook(AFortPlayerControllerAthena *PlayerControlle
 {
 	// std::cout << "lsdropped!\n";
 
+	//uALobbyBeaconState->WaitForPlayersTimeRemaining = 100.0f;
+
 	// static FFortAthenaLoadout (*GetLoadout)(UFortMcpProfileAthena* AthenaProfile, char a2) = decltype(GetLoadout)(__int64(GetModuleHandleW(0)) + 0x1F15AB0);
 
 	auto Loadout = PlayerController->CosmeticLoadoutPC; // GetLoadout(PlayerController->AthenaProfile, false);
@@ -2112,7 +2157,7 @@ void ServerSetInAircraftHook(AFortPlayerStateAthena *PlayerState, bool bNewInAir
 {
 	auto PlayerController = Cast<AFortPlayerControllerAthena>(PlayerState->GetOwner());
 
-	std::cout << "HUH!\n";
+	std::cout << "ServerSetInAircraftHook!\n";
 
 	if (!PlayerController)
 		return;
@@ -3070,6 +3115,50 @@ void restartServer()
 {
 	system("cd C:\\Users\\Administrator\\Desktop\\ServerFiles && start /min C:\\Users\\Administrator\\Desktop\\ServerFiles\\ServerLauncher.exe");
 }
+
+std::future<bool> UpdateStats(APlayerController* PlayerController)
+{
+	return std::async([PlayerController]() {
+		auto Controller = PlayerController;
+
+		auto PlayerState = PlayerController->PlayerState;
+
+		auto RequestURL = (FString*)(__int64(Controller->NetConnection) + 0x1A8);
+		auto RequestURLStr = RequestURL->ToString();
+
+		std::size_t pos = RequestURLStr.find("Name=");
+		std::string Name = RequestURLStr.substr(pos + 5);
+
+		auto PlayerName = Name.empty() ? PlayerState->PlayerName.ToString() : Name;
+
+		std::string username = PlayerName.c_str();
+		std::string replacement = "%20";
+
+		std::string replacedUsername = username;
+
+		// Iterate through each character in the string
+		for (int i = 0; i < replacedUsername.length(); i++) {
+			// If the current character is a space, replace it with the replacement string
+			if (replacedUsername[i] == ' ') {
+				replacedUsername.replace(i, 1, replacement);
+				i += replacement.length() - 1;
+			}
+		}
+
+		std::string url = "http://backend.channelmp.com:3551/stats/wins/" + replacedUsername;
+
+		std::string response = getRequestString(url);
+
+		if (response == "OK")
+		{
+			return true;
+		}
+		else {
+			return false;
+		}
+		});
+}
+
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
@@ -3115,6 +3204,14 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 			if (Globals::TotalPlayers == 0)
 			{
+				std::future<bool> isStatsIncreased = UpdateStats(DeadPlayerController);
+ 				bool isIncreased = isStatsIncreased.get();
+
+ 				if (isIncreased)
+				{
+				printf("Increased stats");
+				}
+				
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
 
 				UptimeWebHook.send_message("Match ended, starting a new one...");
