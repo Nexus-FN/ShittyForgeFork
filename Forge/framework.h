@@ -15,6 +15,21 @@
 
 // #define DEVELOPER_BUILD
 
+#ifdef BUILD_CONFIG
+if (strcmp(BUILD_CONFIG, "Prod") == 0) {
+	Prod = true;
+}
+else if (strcmp(BUILD_CONFIG, "Dev") == 0) {
+	Prod = false;
+}
+else {
+	Prod = true;
+}
+#else
+// :D
+#endif
+
+
 namespace fs = std::filesystem;
 
 enum ENetMode
@@ -345,6 +360,10 @@ namespace Globals
 	static std::string mode = "Solo";
 	static bool timerHasRun = false;
 	static inline bool bNoMCP = false;
+
+	//Build stuff
+	static inline bool Prod = false;
+
 }
 
 inline APawn* SpawnDefaultPawnForHook(AGameModeBase* GameMode, AController* NewPlayer, AActor* StartSpot)
@@ -737,7 +756,9 @@ static void StartAircraft()
 
 
 	//Adding back in production
-	UptimeWebHook.send_message("Match started! Wait for a new one to start.");
+	if (!Globals::bPlayground && !Globals::bCreative)
+		UptimeWebHook.send_message("Match started! Wait for a new one to start.");
+
 }
 
 static void StartAircraftDelayed()

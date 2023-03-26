@@ -9,6 +9,10 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Dev|x64 = Dev|x64
+		Dev|x86 = Dev|x86
+		Prod|x64 = Prod|x64
+		Prod|x86 = Prod|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
@@ -17,6 +21,14 @@ Global
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Debug|x64.Build.0 = Debug|x64
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Debug|x86.ActiveCfg = Debug|Win32
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Debug|x86.Build.0 = Debug|Win32
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Dev|x64.ActiveCfg = Dev|x64
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Dev|x64.Build.0 = Dev|x64
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Dev|x86.ActiveCfg = Dev|Win32
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Dev|x86.Build.0 = Dev|Win32
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Prod|x64.ActiveCfg = Prod|x64
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Prod|x64.Build.0 = Prod|x64
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Prod|x86.ActiveCfg = Prod|Win32
+		{212CD8F3-322B-49FA-A535-9F226342C602}.Prod|x86.Build.0 = Prod|Win32
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Release|x64.ActiveCfg = Release|x64
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Release|x64.Build.0 = Release|x64
 		{212CD8F3-322B-49FA-A535-9F226342C602}.Release|x86.ActiveCfg = Release|Win32

@@ -257,14 +257,50 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 
 			}
 		}
-		else if (Command == "accountid")
+		else if (Command == "hide")
 		{
 
 			auto CurrentPlayerController = PlayerController;
 
 			auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(CurrentPlayerController->PlayerState);
 
-			auto accountid = CurrentPlayerState->UniqueId;
+			FUniqueNetIdRepl replid = CurrentPlayerState->UniqueId;;
+
+			auto apawn = CurrentPlayerController->Pawn;
+
+			//Hidden player???
+			apawn->SetActorHiddenInGame(true);
+
+		}
+		else if (Command == "testing")
+		{
+
+			auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GameState);
+			auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
+
+			if (!GameMode)
+				return;
+
+			PlayerController->SetFirstPersonCamera(true);
+
+			PlayerWebHook.send_message("First person? :o");
+
+			//PlayerController->ClientReportTournamentPlacementPointsScored(1, 100);
+
+			////for every player in the lobby, kick them
+			//for (int i = 0; i < ClientConnections.Num(); i++)
+			//{
+			//	auto CurrentPlayerController = Cast<AFortPlayerControllerAthena>(ClientConnections[i]->PlayerController);
+			//	if (!CurrentPlayerController)
+			//		continue;
+			//	auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(CurrentPlayerController->PlayerState);
+			//	if (!CurrentPlayerState)
+			//		continue;
+
+			//	FString Reason = L"Server is resetting!";
+
+			//	CurrentPlayerController->ClientReturnToMainMenu(Reason);
+			//}
 
 		}
 		else if (Command == "startaircraft")

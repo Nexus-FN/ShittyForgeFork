@@ -1,9 +1,14 @@
 #pragma once
 #include <thread>
+
+
 #include <chrono>
 #include <windows.h>
 #include <atomic>
 #include "framework.h"
+
+#include <iostream>
+#include <stdio.h>
 
 #include <random>
 
@@ -894,6 +899,8 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		static auto LlamaClass = UObject::FindObject<UClass>("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C");
 		// std::cout << "NetServerMaxTickRate: " << GetWorld()->NetDriver->NetServerMaxTickRate << '\n';
 
+		//GetWorld()->NetDriver->NetServerMaxTickRate = 128;
+
 		auto playlistForUptime = GetPlaylistToUse(); // GameState->CurrentPlaylistInfo.BasePlaylist
 
 		std::string requiredplayers = getRequestString("http://backend.channelmp.com:3551/requiredplayers");
@@ -901,22 +908,18 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		Globals::RequiredPlayers = reqPlayers;
 
 		//Adding back in production
-		if (!UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960));
-		{
-			// Sleep(-1); // what why did i have this here i honestly forgot
-			std::cout << "Couldn't send the server uptime webhook!" << std::endl;
-		}
+		if(Globals::Prod)
+		UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960);
 
-		////For development
-		//if (!ServerWebhook.send_message("Server is up for development"))
-		//{
-		//}
+		if (!Globals::Prod)
+			ServerWebhook.send_message("Server is up for development");
 
 		//Added automatic server database entries and PID updating
 		std::string pid = std::to_string(GetCurrentProcessId());
 
 		auto setPidFuture = setPidAsync(pid);
 		bool setPidResult = setPidFuture.get();
+
 		if (setPidResult)
 		{
 			ServerWebhook.send_embed("Updated server", "New data: **Online** and pid " + pid, 16776960);
@@ -3159,6 +3162,8 @@ std::future<bool> UpdateStats(APlayerController* PlayerController)
 		});
 }
 
+
+
 //Comment so I can find this later
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
@@ -3169,6 +3174,8 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 	auto KillerPlayerState = Cast<AFortPlayerStateAthena>(DeathReport.KillerPlayerState);
 	auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->AuthorityGameMode);
 	auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GameState);
+
+	auto KillerPlayerControllerTop = Cast<AFortPlayerControllerAthena>(KillerPlayerState->GetOwner());
 
 	if (!DeadPawn)
 		return;
@@ -3204,7 +3211,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 			if (Globals::TotalPlayers == 0)
 			{
-				std::future<bool> isStatsIncreased = UpdateStats(DeadPlayerController);
+				std::future<bool> isStatsIncreased = UpdateStats(KillerPlayerControllerTop);
  				bool isIncreased = isStatsIncreased.get();
 
  				if (isIncreased)
