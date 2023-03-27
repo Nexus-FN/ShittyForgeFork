@@ -1,6 +1,6 @@
 #pragma once
-#include <thread>
 
+#include <thread>
 
 #include <chrono>
 #include <windows.h>
@@ -908,11 +908,11 @@ bool ReadyToStartMatchHook(AFortGameModeAthena *GameMode)
 		Globals::RequiredPlayers = reqPlayers;
 
 		//Adding back in production
-		if(Globals::Prod)
+		/*if(Globals::Prod)*/
 		UptimeWebHook.send_embed_content("<@&1079389601438912592>", "Servers are up", "EU Servers are up, press play to get into a game. Mode: " + Globals::mode, 16776960);
 
-		if (!Globals::Prod)
-			ServerWebhook.send_message("Server is up for development");
+		/*if (!Globals::Prod)
+			ServerWebhook.send_message("Server is up for development");*/
 
 		//Added automatic server database entries and PID updating
 		std::string pid = std::to_string(GetCurrentProcessId());
@@ -3164,7 +3164,8 @@ std::future<bool> UpdateStats(APlayerController* PlayerController)
 
 
 
-//Comment so I can find this later
+
+
 void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFortPlayerDeathReport DeathReport)
 {
 
@@ -3176,6 +3177,8 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 	auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GameState);
 
 	auto KillerPlayerControllerTop = Cast<AFortPlayerControllerAthena>(KillerPlayerState->GetOwner());
+
+	std::string username = DeadPlayerState->GetPlayerName().ToString();
 
 	if (!DeadPawn)
 		return;
@@ -3211,12 +3214,19 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 			if (Globals::TotalPlayers == 0)
 			{
-				std::future<bool> isStatsIncreased = UpdateStats(KillerPlayerControllerTop);
- 				bool isIncreased = isStatsIncreased.get();
+				//std::future<bool> isStatsIncreased = UpdateStats(KillerPlayerControllerTop);
+ 			//	bool isIncreased = isStatsIncreased.get();
 
- 				if (isIncreased)
+ 			//	if (isIncreased)
+				//{
+				//printf("Increased stats");
+				//}
+
+				if(!Globals::bPlayground && !Globals::bCreative)
 				{
-				printf("Increased stats");
+					auto stats = getRequestString("http://backend.channelmp.com:3551/stats/wins/" + username + "?password=mfeskljwpgpo23U(4jfjuklkdj");
+
+					ServerWebhook.send_message("Increased stats: " + stats);
 				}
 				
 				DeathWebhook.send_embed("Last man", "Last man standing left" + std::to_string(Globals::TotalPlayers), 16776960);
@@ -3225,7 +3235,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 
 				SetConsoleTitleA("Restarting server");
 
-				printf("matchended");
+				printf("matchendedhm");
 
 				//DeathWebhook.send_message("Restarting server in 1 second");
 				std::thread t1(restartServer);

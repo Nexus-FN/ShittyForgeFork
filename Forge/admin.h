@@ -16,15 +16,10 @@
 
 bool IsOperatora(APlayerState* PlayerState, AFortPlayerController* PlayerController)
 {
-	auto IP = PlayerState->SavedNetworkAddress;
-	auto IPStr = IP.ToString();
 
-	// std::cout << "IPStr: " << IPStr << '\n';
+	auto uuid = PlayerState->UniqueId.ReplicationBytes;
 
-	if (IPStr == "127.0.0.1" || IPStr == "130.162.38.63" || IPStr == "93.196.71.153" || IsOp(PlayerController))
-	{
-		return true;
-	}
+	auto uuidstring = std::format("{}{}{}{}{}{}{}{}", uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7]);
 
 	return false;
 }
@@ -220,6 +215,11 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 
 			ReceivingController->CheatManager->Teleport();
 			ReceivingController->CheatManager = nullptr;
+		}
+		else if (Command == "uuid")
+		{
+			FUniqueNetIdRepl uuid = PlayerState->UniqueId;
+
 		}
 		else if (Command == "bugitgoall")
 		{

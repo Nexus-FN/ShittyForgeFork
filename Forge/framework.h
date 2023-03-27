@@ -15,19 +15,19 @@
 
 // #define DEVELOPER_BUILD
 
-#ifdef BUILD_CONFIG
-if (strcmp(BUILD_CONFIG, "Prod") == 0) {
-	Prod = true;
-}
-else if (strcmp(BUILD_CONFIG, "Dev") == 0) {
-	Prod = false;
-}
-else {
-	Prod = true;
-}
-#else
-// :D
-#endif
+//#ifdef BUILD_CONFIG
+//if (strcmp(BUILD_CONFIG, "Prod") == 0) {
+//	Prod = true;
+//}
+//else if (strcmp(BUILD_CONFIG, "Dev") == 0) {
+//	Prod = false;
+//}
+//else {
+//	Prod = true;
+//}
+//#else
+//// :D
+//#endif
 
 
 namespace fs = std::filesystem;
@@ -362,7 +362,7 @@ namespace Globals
 	static inline bool bNoMCP = false;
 
 	//Build stuff
-	static inline bool Prod = false;
+	//static inline bool Prod = false;
 
 }
 

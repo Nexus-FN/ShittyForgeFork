@@ -115,6 +115,12 @@
     <ClInclude Include="ContainerAllocationPolicies.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\AppData\Local\Temp\Rar$DRa2496.4070\easywsclient-master\easywsclient.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="creative.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
