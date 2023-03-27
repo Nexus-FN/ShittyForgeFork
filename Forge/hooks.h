@@ -4638,7 +4638,7 @@ float GetMaxTickRateHook(UGameEngine *Engine, float DeltaTime, bool bAllowFrameR
 {
 	// auto TickRate = GetMaxTickRate(Engine, DeltaTime, bAllowFrameRateSmoothing);
 	// std::cout << "TickRate: " << TickRate << " bAllowFrameRateSmoothing: " << bAllowFrameRateSmoothing << '\n';
-	return 30;
+	return 128;
 }
 
 void ServerFireActorInCannonHook(AFortWeaponRangedMountedCannon *Cannon, FVector LaunchDir)
