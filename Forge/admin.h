@@ -257,6 +257,13 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 
 			}
 		}
+		else if (Command == "kick")
+		{
+			auto CurrentPlayerController = PlayerController;
+
+			KickPlayer(CurrentPlayerController, L"You have been kicked");
+
+		}
 		else if (Command == "hide")
 		{
 
@@ -264,7 +271,7 @@ void ServerCheatHook(AFortPlayerControllerAthena *PlayerController, FString Msg)
 
 			auto CurrentPlayerState = Cast<AFortPlayerStateAthena>(CurrentPlayerController->PlayerState);
 
-			FUniqueNetIdRepl replid = CurrentPlayerState->UniqueId;;
+			FUniqueNetIdRepl replid = CurrentPlayerState->UniqueId;
 
 			auto apawn = CurrentPlayerController->Pawn;
 

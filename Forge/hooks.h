@@ -619,6 +619,60 @@ static std::future<bool> setPidAsync(std::string pid)
 	}
 }
 
+static std::future<bool> setServerStatus(std::string slug)
+{
+	std::string url = "http://backend.channelmp.com:3551/server/setstatus?slug=" + slug + "&token=SecretChannelMPToken1608";
+
+	// Initialize libcurl
+	curl_global_init(CURL_GLOBAL_ALL);
+	CURL* curl = curl_easy_init();
+	if (!curl)
+	{
+		fprintf(stderr, "Failed to initialize libcurl.\n");
+		curl_global_cleanup();
+		PlayerWebHook.send_message("Failed to initialize libcurl for PID.");
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
+	}
+
+	// Set URL to API endpoint
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	// Perform HTTP request
+	CURLcode res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK)
+	{
+		fprintf(stderr, "PID Failed to perform HTTP request: %s\n", curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("PID Failed to perform HTTP request " + res);
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
+	}
+
+	// Check HTTP response code
+	long response_code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+	if (response_code >= 200 && response_code < 300)
+	{
+		// HTTP request successful, check response body
+		bool response_body;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_body);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		return std::async(std::launch::deferred, [response_body]() { return response_body; }); // Return a future with a deferred function to return response_body
+	}
+	else
+	{
+		// HTTP request failed
+		fprintf(stderr, "PID HTTP request failed with status code %ld.\n", response_code);
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+		PlayerWebHook.send_message("PID HTTP request failed with status code " + response_code);
+		return std::async(std::launch::deferred, []() { return false; }); // Return a future with a deferred function to return false
+	}
+}
+
+
 //Experimental input
 void read_console_input()
 {
@@ -3222,7 +3276,7 @@ void ClientOnPawnDiedHook(AFortPlayerControllerAthena *DeadPlayerController, FFo
 				//printf("Increased stats");
 				//}
 
-				if(!Globals::bPlayground && !Globals::bCreative)
+				if(!Globals::bPlayground && !Globals::bCreative && Globals::MatchStarted)
 				{
 					auto stats = getRequestString("http://backend.channelmp.com:3551/stats/wins/" + username + "?password=mfeskljwpgpo23U(4jfjuklkdj");
 

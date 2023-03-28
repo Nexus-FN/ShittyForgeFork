@@ -360,6 +360,7 @@ namespace Globals
 	static std::string mode = "Solo";
 	static bool timerHasRun = false;
 	static inline bool bNoMCP = false;
+	static inline  bool MatchStarted = false;
 
 	//Build stuff
 	//static inline bool Prod = false;
@@ -751,6 +752,8 @@ static void StartAircraft()
 
 	GameState->WarmupCountdownStartTime = TimeSeconds;
 	GameMode->WarmupEarlyCountdownDuration = EarlyDuration;
+
+	Globals::MatchStarted = true;
 
 	// UptimeWebHook.send_embed("Aircraft is starting!", "", 65535);
 
